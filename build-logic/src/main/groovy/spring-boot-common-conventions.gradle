@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
 }
+group = 'kh.edu.istad'
 version = '1.0.0'
 
 java {

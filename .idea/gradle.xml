@@ -19,26 +19,26 @@
                   <project path="$PROJECT_DIR$/istad-common/istad-common-restapi" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/microservice" name="microservice">
+              <build path="$PROJECT_DIR$/microservices" name="microservices">
                 <projects>
-                  <project path="$PROJECT_DIR$/microservice" />
+                  <project path="$PROJECT_DIR$/microservices" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/microservice/business-service" name="business-service">
+              <build path="$PROJECT_DIR$/microservices/business-service" name="business-service">
                 <projects>
-                  <project path="$PROJECT_DIR$/microservice/business-service" />
+                  <project path="$PROJECT_DIR$/microservices/business-service" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/microservice/customer-service" name="customer-service">
+              <build path="$PROJECT_DIR$/microservices/customer-service" name="customer-service">
                 <projects>
-                  <project path="$PROJECT_DIR$/microservice/customer-service" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-domain" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-domain/customer-application-service" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-domain/customer-domain-core" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-main" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-message" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-persistence" />
-                  <project path="$PROJECT_DIR$/microservice/customer-service/customer-service-restapi" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-domain" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-domain/customer-application-service" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-domain/customer-domain-core" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-main" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-message" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-persistence" />
+                  <project path="$PROJECT_DIR$/microservices/customer-service/customer-service-restapi" />
                 </projects>
               </build>
             </builds>
@@ -53,16 +53,16 @@
             <option value="$PROJECT_DIR$/istad-common" />
             <option value="$PROJECT_DIR$/istad-common/istad-common-domain" />
             <option value="$PROJECT_DIR$/istad-common/istad-common-restapi" />
-            <option value="$PROJECT_DIR$/microservice" />
-            <option value="$PROJECT_DIR$/microservice/business-service" />
-            <option value="$PROJECT_DIR$/microservice/customer-service" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-domain" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-domain/customer-application-service" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-domain/customer-domain-core" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-main" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-message" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-persistence" />
-            <option value="$PROJECT_DIR$/microservice/customer-service/customer-service-restapi" />
+            <option value="$PROJECT_DIR$/microservices" />
+            <option value="$PROJECT_DIR$/microservices/business-service" />
+            <option value="$PROJECT_DIR$/microservices/customer-service" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-domain" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-domain/customer-application-service" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-domain/customer-domain-core" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-main" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-message" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-persistence" />
+            <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-restapi" />
           </set>
         </option>
       </GradleProjectSettings>
