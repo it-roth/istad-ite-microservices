@@ -11,4 +11,5 @@ dependencies {
     implementation 'kh.edu.istad:customer-service-restapi'
 
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    runtimeOnly 'org.postgresql:postgresql'
 }

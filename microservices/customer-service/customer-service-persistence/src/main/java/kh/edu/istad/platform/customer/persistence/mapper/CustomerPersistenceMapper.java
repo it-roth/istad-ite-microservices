@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.util.UUID;
+
 @Mapper(componentModel = "spring")
 public interface CustomerPersistenceMapper {
 
@@ -23,7 +24,7 @@ public interface CustomerPersistenceMapper {
             return null;
         }
 
-        return Customer.Builder.builder()
+        return Customer.builder() // <-- Changed from Customer.Builder.builder()
                 .id(new CustomerId(entity.getId()))
                 .username(entity.getUsername())
                 .familyName(entity.getFamilyName())

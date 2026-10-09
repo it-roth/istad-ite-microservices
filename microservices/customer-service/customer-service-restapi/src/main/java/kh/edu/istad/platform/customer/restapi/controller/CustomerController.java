@@ -1,5 +1,6 @@
 package kh.edu.istad.platform.customer.restapi.controller;
 
+import jakarta.validation.Valid;
 import kh.edu.istad.common.domain.valueobject.CustomerId;
 import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
 import kh.edu.istad.platform.customer.domain.usecase.DeactivateCustomerUseCase;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @RequestMapping("/api/customers")
 @Slf4j
 public class CustomerController {
+
     private final InitiateCustomerUseCase initiateCustomerUseCase;
     private final DeactivateCustomerUseCase deactivateCustomerUseCase;
     private final UpdateCustomerUseCase updateCustomerUseCase;
@@ -29,23 +31,31 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerInitiateResponse initiateCustomer(@RequestBody CustomerInitiateRequest customerInitiateRequest){
-        InitiateCustomerResult initiatedCustomerResult=  initiateCustomerUseCase.execute(customerWebMapper.toCommand(customerInitiateRequest));
-        log.info("InitiatedCustomerResult  : {}" , initiatedCustomerResult);
+    public CustomerInitiateResponse initiateCustomer(@Valid @RequestBody CustomerInitiateRequest customerInitiateRequest) {
+        InitiateCustomerResult initiateCustomerResult = initiateCustomerUseCase.execute(
+                customerWebMapper.toCommand(customerInitiateRequest)
+        );
+        log.info("InitiateCustomerResult : {}", initiateCustomerResult);
 
-        return customerWebMapper.toResponse(initiatedCustomerResult);
+        return customerWebMapper.toResponse(initiateCustomerResult);
+    }
+
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public CustomerUpdateResponse updateCustomer(
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody CustomerUpdateRequest customerUpdateRequest
+    ) {
+        CustomerId customerId = new CustomerId(id);
+        return customerWebMapper.toCustomerUpdateResponse(
+                updateCustomerUseCase.execute(customerId, customerWebMapper.toUpdateCustomerCommand(customerUpdateRequest))
+        );
     }
 
     @PatchMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deactivateCustomer(@PathVariable("id") String id) {
-        deactivateCustomerUseCase.execute(id);
-    }
-
-    @PatchMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public CustomerUpdateResponse updateCustomer(@PathVariable("id") String id, @RequestBody CustomerUpdateRequest customerUpdateRequest) {
-        CustomerId customerId = new CustomerId(UUID.fromString(id));
-        return customerWebMapper.toCustomerUpdateResponse(updateCustomerUseCase.execute(customerId,customerWebMapper.toUpdateCustomerCommand(customerUpdateRequest)));
+    public void deactivateCustomer(@PathVariable("id") UUID id) {
+        CustomerId customerId = new CustomerId(id);
+        deactivateCustomerUseCase.execute(customerId.value().toString());
     }
 }

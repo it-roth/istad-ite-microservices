@@ -3,4 +3,7 @@ package kh.edu.istad.common.domain.valueobject;
 import java.util.UUID;
 
 public record CustomerId(UUID value) {
+    public UUID getValue() {
+        return value;
+    }
 }

@@ -101,7 +101,7 @@ public class Customer extends AggregateRoot<CustomerId> {
         }
 
         public static Builder builder() {
-            return null;
+            return new Builder();
         }
 
         public Builder id(CustomerId val) {

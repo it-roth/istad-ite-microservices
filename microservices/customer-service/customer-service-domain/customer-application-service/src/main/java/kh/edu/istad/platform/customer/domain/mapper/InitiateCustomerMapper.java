@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class InitiateCustomerMapper {
 
-    public Customer toCustomer(InitiateCustomerCommand command) {
-        return Customer.Builder.builder()
+    public Customer fromInitiateCustomerCommandToCustomer(InitiateCustomerCommand command) {
+        return Customer.builder()
                 .username(command.username())
                 .familyName(command.familyName())
                 .givenName(command.givenName())
@@ -20,7 +20,7 @@ public class InitiateCustomerMapper {
                 .build();
     }
 
-    public InitiateCustomerResult toResult(Customer customer) {
+    public InitiateCustomerResult fromCustomerToInitiatedCustomerResult(Customer customer) {
         return new InitiateCustomerResult(
                 customer.getId().value(),
                 customer.getUsername(),
