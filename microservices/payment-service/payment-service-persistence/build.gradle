@@ -1,0 +1,8 @@
+plugins {
+    id 'spring-common-conventions'
+}
+
+dependencies {
+    api 'kh.edu.istad:payment-application-service'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+}
