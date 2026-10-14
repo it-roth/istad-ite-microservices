@@ -1,0 +1,28 @@
+### Create Order Test
+POST http://localhost:9092/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "123e4567-e89b-12d3-a456-426614174000",
+  "businessId": "123e4567-e89b-12d3-a456-426614174001",
+  "price": 250.00,
+  "items": [
+    {
+      "productId": "123e4567-e89b-12d3-a456-426614174010",
+      "quantity": 2,
+      "price": 100.00,
+      "subTotal": 200.00
+    },
+    {
+      "productId": "123e4567-e89b-12d3-a456-426614174011",
+      "quantity": 1,
+      "price": 50.00,
+      "subTotal": 50.00
+    }
+  ],
+  "address": {
+    "street": "123 Main Street",
+    "postalCode": "12000",
+    "city": "Phnom Penh"
+  }
+}
