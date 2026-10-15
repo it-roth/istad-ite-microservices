@@ -1,0 +1,15 @@
+plugins {
+    id 'spring-boot-common-conventions'
+}
+
+dependencies {
+
+    implementation 'kh.edu.istad:business-domain-core'
+    implementation 'kh.edu.istad:business-application-service'
+    implementation 'kh.edu.istad:business-service-message'
+    implementation 'kh.edu.istad:business-service-persistence'
+    implementation 'kh.edu.istad:business-service-restapi'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
+
+}
