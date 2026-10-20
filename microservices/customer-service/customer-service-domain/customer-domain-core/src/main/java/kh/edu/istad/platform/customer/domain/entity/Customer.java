@@ -2,6 +2,7 @@ package kh.edu.istad.platform.customer.domain.entity;
 
 import kh.edu.istad.common.domain.entity.AggregateRoot;
 import kh.edu.istad.common.domain.valueobject.CustomerId;
+import kh.edu.istad.common.domain.valueobject.CustomerSegmentId;
 import kh.edu.istad.platform.customer.domain.exception.CustomerDomainException;
 import kh.edu.istad.platform.customer.domain.valueobject.CustomerStatus;
 import kh.edu.istad.platform.customer.domain.valueobject.Email;
@@ -10,14 +11,14 @@ import kh.edu.istad.platform.customer.domain.valueobject.PhoneNumber;
 import java.util.UUID;
 
 public class Customer extends AggregateRoot<CustomerId> {
-    private final String username;
+    private String username;
     private String familyName;
     private String givenName;
-    private final Email email;
-    private final PhoneNumber phoneNumber;
+    private Email email;
+    private PhoneNumber phoneNumber;
+    private CustomerSegmentId segmentId;
     private CustomerStatus status;
 
-    // Domain Critical Logic
     public void initiateCustomer() {
         validateCustomer();
         super.setId(new CustomerId(UUID.randomUUID()));
@@ -31,14 +32,32 @@ public class Customer extends AggregateRoot<CustomerId> {
         if (status != null) {
             throw new CustomerDomainException("Customer status must be null");
         }
+        validateDetails();
+    }
+
+    public void updateCustomer(
+            String username,
+            String familyName,
+            String givenName,
+            Email email,
+            PhoneNumber phoneNumber,
+            CustomerSegmentId segmentId
+    ) {
+        validateDetails(username, familyName, givenName, email, phoneNumber);
+        this.username = username;
+        this.familyName = familyName;
+        this.givenName = givenName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.segmentId = segmentId;
     }
 
     public void updateCustomer(String familyName, String givenName) {
-        if (familyName == null || givenName == null) {
-            throw new CustomerDomainException("familyName and givenName must not be null");
-        }
-        this.familyName = familyName;
-        this.givenName = givenName;
+        updateCustomer(username, familyName, givenName, email, phoneNumber, segmentId);
+    }
+
+    public void validateForUpdate() {
+        validateDetails(username, familyName, givenName, email, phoneNumber);
     }
 
     public void deactivateCustomer() {
@@ -48,6 +67,33 @@ public class Customer extends AggregateRoot<CustomerId> {
         status = CustomerStatus.INACTIVE;
     }
 
+    private void validateDetails() {
+        validateDetails(username, familyName, givenName, email, phoneNumber);
+    }
+
+    private static void validateDetails(
+            String username,
+            String familyName,
+            String givenName,
+            Email email,
+            PhoneNumber phoneNumber
+    ) {
+        if (username == null || username.isBlank()) {
+            throw new CustomerDomainException("Customer username must not be blank");
+        }
+        if (familyName == null || familyName.isBlank()) {
+            throw new CustomerDomainException("Customer family name must not be blank");
+        }
+        if (givenName == null || givenName.isBlank()) {
+            throw new CustomerDomainException("Customer given name must not be blank");
+        }
+        if (email == null || email.value() == null || email.value().isBlank()) {
+            throw new CustomerDomainException("Customer email must not be blank");
+        }
+        if (phoneNumber == null || phoneNumber.value() == null || phoneNumber.value().isBlank()) {
+            throw new CustomerDomainException("Customer phone number must not be blank");
+        }
+    }
 
     public String getUsername() {
         return username;
@@ -73,6 +119,10 @@ public class Customer extends AggregateRoot<CustomerId> {
         return status;
     }
 
+    public CustomerSegmentId getSegmentId() {
+        return segmentId;
+    }
+
     private Customer(Builder builder) {
         super.setId(builder.id);
         username = builder.username;
@@ -80,6 +130,7 @@ public class Customer extends AggregateRoot<CustomerId> {
         givenName = builder.givenName;
         email = builder.email;
         phoneNumber = builder.phoneNumber;
+        segmentId = builder.segmentId;
         status = builder.status;
     }
 
@@ -95,6 +146,7 @@ public class Customer extends AggregateRoot<CustomerId> {
         private String givenName;
         private Email email;
         private PhoneNumber phoneNumber;
+        private CustomerSegmentId segmentId;
         private CustomerStatus status;
 
         private Builder() {
@@ -127,6 +179,11 @@ public class Customer extends AggregateRoot<CustomerId> {
 
         public Builder phoneNumber(PhoneNumber val) {
             phoneNumber = val;
+            return this;
+        }
+
+        public Builder segmentId(CustomerSegmentId val) {
+            segmentId = val;
             return this;
         }
 

@@ -1,28 +1,27 @@
 package kh.edu.istad.platform.customer.domain.usecase;
 
 import kh.edu.istad.common.domain.valueobject.CustomerId;
+import kh.edu.istad.platform.customer.domain.entity.Customer;
+import kh.edu.istad.platform.customer.domain.exception.CustomerNotFoundException;
 import kh.edu.istad.platform.customer.domain.port.out.CustomerRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-@Component
-@Slf4j
+import java.util.UUID;
+
+@Service
 @RequiredArgsConstructor
 public class DeactivateCustomerUseCase {
-
     private final CustomerRepository customerRepository;
 
-    public Mono<Void> execute(CustomerId customerId) {
+    public Mono<Customer> deactivate(String id) {
+        CustomerId customerId = new CustomerId(UUID.fromString(id));
         return customerRepository.findById(customerId)
-                .map(customer -> {
+                .switchIfEmpty(Mono.error(new CustomerNotFoundException(id)))
+                .flatMap(customer -> {
                     customer.deactivateCustomer();
-                    return customer;
-                })
-                .flatMap(customerRepository::save)
-                .doOnSuccess(saved ->
-                        log.info("Customer deactivated: {}", customerId))
-                .then();
+                    return customerRepository.save(customer);
+                });
     }
 }

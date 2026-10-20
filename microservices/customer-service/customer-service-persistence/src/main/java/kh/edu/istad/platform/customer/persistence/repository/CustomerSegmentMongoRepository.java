@@ -1,10 +1,10 @@
 package kh.edu.istad.platform.customer.persistence.repository;
 
-import kh.edu.istad.platform.customer.persistence.entity.CustomerSegmentDocument;
+import kh.edu.istad.platform.customer.persistence.document.CustomerSegmentDocument;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
-@Repository
-public interface CustomerSegmentMongoRepository extends ReactiveMongoRepository<CustomerSegmentDocument,String> {
-
+public interface CustomerSegmentMongoRepository
+        extends ReactiveMongoRepository<CustomerSegmentDocument, String> {
+    Mono<CustomerSegmentDocument> findByTypeIgnoreCase(String type);
 }

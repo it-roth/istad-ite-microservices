@@ -3,6 +3,7 @@ package kh.edu.istad.platform.customer.restapi.mapper;
 import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerCommand;
 import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
 import kh.edu.istad.platform.customer.domain.entity.Customer;
+import kh.edu.istad.common.domain.valueobject.CustomerSegmentId;
 import kh.edu.istad.platform.customer.domain.valueobject.Email;
 import kh.edu.istad.platform.customer.domain.valueobject.PhoneNumber;
 import kh.edu.istad.platform.customer.restapi.dto.CreateCustomerRequest;
@@ -25,6 +26,12 @@ public interface CustomerWebMapper {
 
     default PhoneNumber toPhoneNumber(String phoneNumber){
         return new PhoneNumber(phoneNumber);
+    }
+
+    default CustomerSegmentId toCustomerSegmentId(String segmentId) {
+        return segmentId == null || segmentId.isBlank()
+                ? null
+                : new CustomerSegmentId(java.util.UUID.fromString(segmentId));
     }
 
 }
