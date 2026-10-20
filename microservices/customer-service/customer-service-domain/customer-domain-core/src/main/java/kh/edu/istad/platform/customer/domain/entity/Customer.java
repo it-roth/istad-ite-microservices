@@ -100,10 +100,6 @@ public class Customer extends AggregateRoot<CustomerId> {
         private Builder() {
         }
 
-        public static Builder builder() {
-            return new Builder();
-        }
-
         public Builder id(CustomerId val) {
             id = val;
             return this;

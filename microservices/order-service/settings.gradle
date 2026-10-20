@@ -14,10 +14,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'order-service'
-
 include 'order-service-main'
-include 'order-service-domain:order-domain-core'
-include 'order-service-domain:order-application-service'
-include 'order-service-restapi'
-include 'order-service-persistence'
-include 'order-service-message'

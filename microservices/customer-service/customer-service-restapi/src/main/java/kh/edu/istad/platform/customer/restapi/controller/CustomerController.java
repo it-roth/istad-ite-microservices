@@ -1,61 +1,58 @@
 package kh.edu.istad.platform.customer.restapi.controller;
 
-import jakarta.validation.Valid;
-import kh.edu.istad.common.domain.valueobject.CustomerId;
+import kh.edu.istad.common.domain.valueobject.Money;
 import kh.edu.istad.platform.customer.domain.dto.InitiateCustomerResult;
-import kh.edu.istad.platform.customer.domain.usecase.DeactivateCustomerUseCase;
+import kh.edu.istad.platform.customer.domain.entity.Customer;
+import kh.edu.istad.platform.customer.domain.usecase.CreateCustomerUseCase;
 import kh.edu.istad.platform.customer.domain.usecase.InitiateCustomerUseCase;
-import kh.edu.istad.platform.customer.domain.usecase.UpdateCustomerUseCase;
+import kh.edu.istad.platform.customer.domain.usecase.QueryCustomerUseCase;
+import kh.edu.istad.platform.customer.restapi.dto.CreateCustomerRequest;
 import kh.edu.istad.platform.customer.restapi.dto.CustomerInitiateRequest;
 import kh.edu.istad.platform.customer.restapi.dto.CustomerInitiateResponse;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerUpdateRequest;
-import kh.edu.istad.platform.customer.restapi.dto.CustomerUpdateResponse;
 import kh.edu.istad.platform.customer.restapi.mapper.CustomerWebMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/customers")
-@Slf4j
 public class CustomerController {
 
     private final InitiateCustomerUseCase initiateCustomerUseCase;
-    private final DeactivateCustomerUseCase deactivateCustomerUseCase;
-    private final UpdateCustomerUseCase updateCustomerUseCase;
+    private final CreateCustomerUseCase createCustomerUseCase;
+    private final QueryCustomerUseCase queryCustomerUseCase;
     private final CustomerWebMapper customerWebMapper;
+
+    @GetMapping
+    public Flux<Customer> findAll(){
+        return queryCustomerUseCase.findAll();
+    }
+
+    @GetMapping("/query")
+    public Flux<Customer> query(){
+        return queryCustomerUseCase.query();
+    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerInitiateResponse initiateCustomer(@Valid @RequestBody CustomerInitiateRequest customerInitiateRequest) {
-        InitiateCustomerResult initiateCustomerResult = initiateCustomerUseCase.execute(
-                customerWebMapper.toCommand(customerInitiateRequest)
-        );
-        log.info("InitiateCustomerResult : {}", initiateCustomerResult);
-
-        return customerWebMapper.toResponse(initiateCustomerResult);
+    public Mono<Customer> create(@RequestBody CreateCustomerRequest request){
+        return createCustomerUseCase.create(customerWebMapper.toDomain(request));
     }
 
-    @PatchMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public CustomerUpdateResponse updateCustomer(
-            @PathVariable("id") UUID id,
-            @Valid @RequestBody CustomerUpdateRequest customerUpdateRequest
-    ) {
-        CustomerId customerId = new CustomerId(id);
-        return customerWebMapper.toCustomerUpdateResponse(
-                updateCustomerUseCase.execute(customerId, customerWebMapper.toUpdateCustomerCommand(customerUpdateRequest))
-        );
-    }
+//    @ResponseStatus(HttpStatus.CREATED)
+//    @PostMapping
+//    public CustomerInitiateResponse initiateCustomer(
+//            @RequestBody CustomerInitiateRequest customerInitiateRequest
+//            ) {
+//
+//        InitiateCustomerResult result = initiateCustomerUseCase.execute(
+//                customerWebMapper.toCommand(customerInitiateRequest)
+//        );
+//        return customerWebMapper.toResponse(result);
+//    }
 
-    @PatchMapping("/{id}/deactivate")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deactivateCustomer(@PathVariable("id") UUID id) {
-        CustomerId customerId = new CustomerId(id);
-        deactivateCustomerUseCase.execute(customerId.value().toString());
-    }
 }

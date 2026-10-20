@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public class CustomerDomainServiceImpl implements CustomerDomainService{
+
     @Override
     public CustomerInitiatedEvent initiateCustomer(Customer customer) {
         customer.initiateCustomer();
@@ -17,7 +18,7 @@ public class CustomerDomainServiceImpl implements CustomerDomainService{
 
     @Override
     public CustomerUpdatedEvent updateCustomer(Customer customer) {
-        customer.updateCustomer(customer.getFamilyName(),customer.getGivenName());
+        customer.updateCustomer(customer.getFamilyName(), customer.getGivenName());
         return new CustomerUpdatedEvent(customer, ZonedDateTime.now(ZoneId.of("UTC")));
     }
 
