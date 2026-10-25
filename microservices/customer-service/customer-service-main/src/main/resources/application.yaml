@@ -4,14 +4,15 @@ server:
 spring:
   application:
     name: customer-service
+  mongodb:
+    host: localhost
+    port: 2026
+    username: mongod
+    password: mongod
+    database: db_customer
+    authentication-database: admin
   data:
     mongodb:
-      host: localhost
-      port: 2026
-      username: mongod
-      password: mongod
-      database: db_customer
-      authentication-database: admin
       auto-index-creation: true
 
 eureka:

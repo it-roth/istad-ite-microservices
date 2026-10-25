@@ -5,6 +5,21 @@ spring:
   application:
     name: order-service
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/istad_platform
+    username: postgres
+    password: roth123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
 eureka:
   client:
     service-url:
@@ -14,25 +29,19 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}:${random.value}
-    lease-renewal-interval-in-seconds: 10
-    lease-expiration-duration-in-seconds: 30
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,eureka
-  endpoint:
-    health:
-      show-details: always
-
-# Service communication endpoints for Part 1 (Hard-coded) and Part 3 (Eureka Service Discovery)
 microservices:
   hardcoded:
-    customer-url: "http://localhost:9091"
-    business-url: "http://localhost:9093"
-    payment-url: "http://localhost:9094"
+    customer-url: http://localhost:9091
+    business-url: http://localhost:9093
+    payment-url: http://localhost:9094
   eureka:
-    customer-url: "http://customer-service"
-    business-url: "http://business-service"
-    payment-url: "http://payment-service"
+    customer-url: http://customer-service
+    business-url: http://business-service
+    payment-url: http://payment-service
+
+logging:
+  level:
+    kh.edu.istad: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG

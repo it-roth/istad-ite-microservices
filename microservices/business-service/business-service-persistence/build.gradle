@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api project(':business-service-domain:business-application-service')
+    api 'kh.edu.istad:business-application-service'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
 }

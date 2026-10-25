@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-    api project(':business-service-domain:business-domain-core')
-    
+    api 'kh.edu.istad:business-domain-core'
+
     // Reactor for reactive programming (Mono/Flux)
     implementation 'io.projectreactor:reactor-core'
 }

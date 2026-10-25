@@ -3,13 +3,13 @@ plugins {
 }
 
 dependencies {
-
     implementation 'kh.edu.istad:order-domain-core'
     implementation 'kh.edu.istad:order-application-service'
     implementation 'kh.edu.istad:order-service-persistence'
-
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'kh.edu.istad:order-service-restapi'
+    implementation 'kh.edu.istad:order-service-message'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:5.0.3'
-    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer:5.0.4'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'org.postgresql:postgresql'
 }

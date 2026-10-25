@@ -6,52 +6,57 @@ import kh.edu.istad.common.domain.valueobject.BusinessId;
 import java.util.List;
 
 public class Business extends AggregateRoot<BusinessId> {
-    private final List<Product> products;
-    private Boolean active;
 
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
+    private final List<Product> products;
+    private boolean active;
+    private String businessName;
 
     public List<Product> getProducts() {
         return products;
     }
 
-    public Boolean getActive() {
+    public boolean isActive() {
         return active;
     }
 
+    public String getBusinessName() {
+        return businessName;
+    }
+
     private Business(Builder builder) {
-        super.setId(builder.id);
-        products = builder.products;
-        active = builder.active;
+        super.setId(builder.businessId);
+        this.products = builder.products;
+        this.active = builder.active;
+        this.businessName = builder.businessName;
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-
     public static final class Builder {
-        private BusinessId id;
+        private BusinessId businessId;
         private List<Product> products;
-        private Boolean active;
+        private boolean active;
+        private String businessName;
 
-        private Builder() {
-        }
-
-        public Builder id(BusinessId val) {
-            id = val;
+        public Builder businessId(BusinessId businessId) {
+            this.businessId = businessId;
             return this;
         }
 
-        public Builder products(List<Product> val) {
-            products = val;
+        public Builder products(List<Product> products) {
+            this.products = products;
             return this;
         }
 
-        public Builder active(Boolean val) {
-            active = val;
+        public Builder active(boolean active) {
+            this.active = active;
+            return this;
+        }
+
+        public Builder businessName(String businessName) {
+            this.businessName = businessName;
             return this;
         }
 
