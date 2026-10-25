@@ -1,0 +1,13 @@
+server:
+  port: 9093
+
+spring:
+  application:
+    name: business-service
+  mongodb:
+    host: localhost
+    port: 2026
+    username: mongod
+    password: mongod
+    database: db_business
+    authentication-database: admin

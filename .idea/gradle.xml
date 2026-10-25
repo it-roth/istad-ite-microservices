@@ -27,6 +27,13 @@
               <build path="$PROJECT_DIR$/microservices/business-service" name="business-service">
                 <projects>
                   <project path="$PROJECT_DIR$/microservices/business-service" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-domain" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-domain/business-application-service" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-domain/business-domain-core" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-main" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-message" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-persistence" />
+                  <project path="$PROJECT_DIR$/microservices/business-service/business-service-restapi" />
                 </projects>
               </build>
               <build path="$PROJECT_DIR$/microservices/customer-service" name="customer-service">
@@ -77,6 +84,13 @@
             <option value="$PROJECT_DIR$/istad-common/istad-common-restapi" />
             <option value="$PROJECT_DIR$/microservices" />
             <option value="$PROJECT_DIR$/microservices/business-service" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-domain" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-domain/business-application-service" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-domain/business-domain-core" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-main" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-message" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-persistence" />
+            <option value="$PROJECT_DIR$/microservices/business-service/business-service-restapi" />
             <option value="$PROJECT_DIR$/microservices/customer-service" />
             <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-domain" />
             <option value="$PROJECT_DIR$/microservices/customer-service/customer-service-domain/customer-application-service" />
