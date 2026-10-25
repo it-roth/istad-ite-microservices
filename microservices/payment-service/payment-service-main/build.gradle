@@ -9,4 +9,6 @@ dependencies {
     implementation 'kh.edu.istad:payment-service-restapi'
     implementation 'kh.edu.istad:payment-service-message'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:5.0.3'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }

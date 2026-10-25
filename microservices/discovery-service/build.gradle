@@ -1,0 +1,8 @@
+plugins {
+    id 'spring-boot-common-conventions'
+}
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server:5.0.3'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+}
