@@ -3,6 +3,10 @@ plugins {
 }
 
 dependencies {
+
+    implementation 'kh.edu.istad:order-domain-core'
+    implementation 'kh.edu.istad:order-application-service'
+    implementation 'kh.edu.istad:order-service-persistence'
+
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    testImplementation 'io.projectreactor:reactor-test'
 }
