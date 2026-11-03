@@ -11,7 +11,6 @@ spring:
         instance-id: ${spring.application.name}-${random.value}
         prefer-ip-address: true
 
-
   mongodb:
     host: localhost
     port: 2026
@@ -19,3 +18,10 @@ spring:
     database: db_customer
     authentication-database: admin
     password: mongod
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
+          jwk-set-uri: http://localhost:9000/oauth2/jwks

@@ -1,3 +1,6 @@
+server:
+  port: 9092
+
 spring:
   application:
     name: order-service
@@ -30,13 +33,6 @@ spring:
     password: roth123
     driver-class-name: org.postgresql.Driver
 
-
-#  http:
-#    serviceclient:
-#      customer-service:
-#        connect-timeout:
-#          seconds: 10
-#        read-timeout:
-#          seconds: 10
-#        base-url: http://customer-service
-
+services:
+  customer:
+    url: http://localhost:9091
