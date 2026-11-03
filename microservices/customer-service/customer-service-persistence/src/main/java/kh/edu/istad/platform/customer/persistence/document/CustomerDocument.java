@@ -4,7 +4,10 @@ import kh.edu.istad.platform.customer.domain.valueobject.CustomerStatus;
 import lombok.*;
 import org.springframework.data.annotation.*;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import org.springframework.data.mongodb.repository.Update;
 
 import java.time.Instant;
 
@@ -13,7 +16,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "customers")
+@Document
 public class CustomerDocument implements Persistable<String> {
 
     @Id
@@ -29,8 +32,6 @@ public class CustomerDocument implements Persistable<String> {
 
     private String phoneNumber;
 
-    private String segmentId;
-
     private CustomerStatus status;
 
     @CreatedBy
@@ -43,7 +44,7 @@ public class CustomerDocument implements Persistable<String> {
     private String modifiedBy;
 
     @LastModifiedDate
-    private Instant modifiedAt;
+    private String modifiedAt;
 
     @Override
     public boolean isNew() {

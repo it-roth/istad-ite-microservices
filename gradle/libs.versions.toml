@@ -1,0 +1,29 @@
+[versions]
+
+java-language-version = "25"
+spring-boot-gradle-plugin = "4.1.1"
+dependency-management-plugin = "1.1.7"
+spring-doc-openapi = "3.2.0"
+
+[libraries]
+spring-boot-gradle-plugin = {module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot-gradle-plugin"}
+dependency-management-plugin = {module = "io.spring.gradle:dependency-management-plugin", version.ref = "dependency-management-plugin"}
+spring-boot-starter-data-r2dbc = {module = "org.springframework.boot:spring-boot-starter-data-r2dbc" }
+
+
+springdoc-openapi-starter-webmvc-ui = {module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "spring-doc-openapi"}
+
+
+# ORDER SERVICE
+order-application-service = {module = "kh.edu.istad:order-application-service"}
+order-domain-core = {module = "kh.edu.istad:order-domain-core"}
+
+[bundles]
+gradle-dependency-management = [
+    "spring-boot-gradle-plugin",
+    "dependency-management-plugin"
+]
+
+[plugins]
+java-common-convetions = {id = "java-common-conventions"}
+spring-common-conventions = {id = "spring-common-conventions"}

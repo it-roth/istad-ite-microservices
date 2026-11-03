@@ -1,7 +1,8 @@
 plugins {
-    id 'spring-common-conventions'
+    alias(libs.plugins.spring.common.conventions)
 }
 
 dependencies {
-    api 'kh.edu.istad:order-application-service'
+    api libs.order.application.service
+    api libs.spring.boot.starter.data.r2dbc
 }

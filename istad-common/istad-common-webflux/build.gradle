@@ -1,0 +1,14 @@
+plugins {
+    id 'spring-boot-common-conventions'
+}
+
+dependencies {
+    implementation 'kh.edu.istad:istad-common-domain'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webflux-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+bootJar {
+    enabled = false
+}

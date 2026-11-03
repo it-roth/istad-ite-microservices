@@ -11,8 +11,16 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
     }
+
+    versionCatalogs {
+        libs {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
 }
 
 rootProject.name = 'istad-common'
 include 'istad-common-domain'
 include 'istad-common-restapi'
+include 'istad-common-swagger'
+include 'istad-common-webflux'

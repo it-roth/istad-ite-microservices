@@ -11,6 +11,12 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
     }
+
+    versionCatalogs {
+        libs {
+            from(files("../../gradle/libs.versions.toml"))
+        }
+    }
 }
 
 rootProject.name = 'customer-service'

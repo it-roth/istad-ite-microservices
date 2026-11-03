@@ -2,6 +2,16 @@ server:
   port: 9091
 
 spring:
+  application:
+    name: customer-service
+
+  cloud:
+    consul:
+      discovery:
+        instance-id: ${spring.application.name}-${random.value}
+        prefer-ip-address: true
+
+
   mongodb:
     host: localhost
     port: 2026

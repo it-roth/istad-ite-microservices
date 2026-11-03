@@ -5,7 +5,6 @@ public record CreateCustomerRequest(
         String familyName,
         String givenName,
         String email,
-        String phoneNumber,
-        String segmentId
+        String phoneNumber
 ) {
 }

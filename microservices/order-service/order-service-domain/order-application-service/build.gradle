@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
+    api 'io.projectreactor:reactor-core'
     api 'kh.edu.istad:order-domain-core'
 }
