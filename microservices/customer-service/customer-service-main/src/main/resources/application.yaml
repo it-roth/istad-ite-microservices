@@ -8,6 +8,7 @@ spring:
   cloud:
     consul:
       discovery:
+        health-check-url: http://host.docker.internal:${server.port}/actuator/health
         instance-id: ${spring.application.name}-${random.value}
         prefer-ip-address: true
 
