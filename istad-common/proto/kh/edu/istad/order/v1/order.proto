@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package kh.edu.istad.order.v1;
+
+option java_multiple_files = true;
+option java_package = "kh.edu.istad.order.v1";
+option java_outer_classname = "OrderProto";
+
+service OrderGrpcService {
+  // Method 1: GetOrderById using GetOrderByIdRequest and GetOrderByIdResponse
+  rpc GetOrderById (GetOrderByIdRequest) returns (GetOrderByIdResponse);
+
+  // Method 2: CreateOrder using CreateOrderRequest and CreateOrderResponse
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+}
+
+// Messages for GetOrderById
+message GetOrderByIdRequest {
+  string order_id = 1;
+}
+
+message GetOrderByIdResponse {
+  string order_id = 1;
+  string customer_id = 2;
+  string business_id = 3;
+  string status = 4;
+  string tracking_id = 5;
+  double total_amount = 6;
+}
+
+// Messages for CreateOrder
+message CreateOrderRequest {
+  string customer_id = 1;
+  string business_id = 2;
+  string street = 3;
+  string city = 4;
+  string postal_code = 5;
+  double total_amount = 6;
+}
+
+message CreateOrderResponse {
+  string order_id = 1;
+  string tracking_id = 2;
+  string status = 3;
+  double total_amount = 4;
+}

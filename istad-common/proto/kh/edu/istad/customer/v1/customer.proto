@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package kh.edu.istad.customer.v1;
+
+option java_multiple_files = true;
+option java_package = "kh.edu.istad.customer.v1";
+option java_outer_classname = "CustomerProto";
+
+service CustomerGrpcService {
+  // Method 1: GetCustomerById using GetCustomerByIdRequest and GetCustomerByIdResponse
+  rpc GetCustomerById (GetCustomerByIdRequest) returns (GetCustomerByIdResponse);
+
+  // Method 2: CreateCustomer using CreateCustomerRequest and CreateCustomerResponse
+  rpc CreateCustomer (CreateCustomerRequest) returns (CreateCustomerResponse);
+}
+
+// Messages for GetCustomerById
+message GetCustomerByIdRequest {
+  string customer_id = 1;
+}
+
+message GetCustomerByIdResponse {
+  string customer_id = 1;
+  string username = 2;
+  string family_name = 3;
+  string given_name = 4;
+  string email = 5;
+  string phone_number = 6;
+  string status = 7;
+}
+
+// Messages for CreateCustomer
+message CreateCustomerRequest {
+  string username = 1;
+  string family_name = 2;
+  string given_name = 3;
+  string email = 4;
+  string phone_number = 5;
+}
+
+message CreateCustomerResponse {
+  string customer_id = 1;
+  string username = 2;
+  string family_name = 3;
+  string given_name = 4;
+  string email = 5;
+  string phone_number = 6;
+  string status = 7;
+}

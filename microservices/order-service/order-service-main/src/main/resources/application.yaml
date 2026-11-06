@@ -32,13 +32,8 @@ spring:
     password: roth123
     driver-class-name: org.postgresql.Driver
 
-
-#  http:
-#    serviceclient:
-#      customer-service:
-#        connect-timeout:
-#          seconds: 10
-#        read-timeout:
-#          seconds: 10
-#        base-url: http://customer-service
-
+grpc:
+  client:
+    customer-service:
+      host: localhost
+      port: 9094

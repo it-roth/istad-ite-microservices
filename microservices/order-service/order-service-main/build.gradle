@@ -12,6 +12,9 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
 
+    implementation "kh.edu.istad:istad-common-proto"
+    implementation 'io.grpc:grpc-netty-shaded:1.83.1'
+
     implementation 'kh.edu.istad:order-domain-core'
     implementation 'kh.edu.istad:order-service-client'
     implementation 'kh.edu.istad:order-application-service'
@@ -27,5 +30,3 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
-
-

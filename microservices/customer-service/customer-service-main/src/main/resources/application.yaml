@@ -12,7 +12,6 @@ spring:
         instance-id: ${spring.application.name}-${random.value}
         prefer-ip-address: true
 
-
   mongodb:
     host: localhost
     port: 2026
@@ -20,3 +19,7 @@ spring:
     database: db_customer
     authentication-database: admin
     password: mongod
+
+grpc:
+  server:
+    port: 9094

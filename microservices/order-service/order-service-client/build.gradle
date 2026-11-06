@@ -5,6 +5,9 @@ plugins {
 
 dependencies {
     implementation "kh.edu.istad:order-application-service"
+    implementation "kh.edu.istad:istad-common-proto"
+    implementation 'io.grpc:grpc-netty-shaded:1.83.1'
+
     implementation 'org.springframework.boot:spring-boot-starter-webclient'
     implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     testImplementation 'io.projectreactor:reactor-test'
