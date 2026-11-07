@@ -1,0 +1,29 @@
+plugins {
+    id 'spring-cloud-common-conventions'
+}
+
+dependencies {
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    implementation 'kh.edu.istad:iam-domain-core'
+    implementation 'kh.edu.istad:iam-application-service'
+    implementation 'kh.edu.istad:iam-persistence'
+    implementation 'kh.edu.istad:iam-infrastructure'
+    implementation 'kh.edu.istad:iam-rest-api'
+    implementation 'kh.edu.istad:iam-web'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

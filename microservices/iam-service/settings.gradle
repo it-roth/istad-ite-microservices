@@ -19,4 +19,12 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name="iam-service"
+rootProject.name = 'iam-service'
+
+include 'iam-main'
+include 'iam-domain:iam-domain-core'
+include 'iam-domain:iam-application-service'
+include 'iam-persistence'
+include 'iam-infrastructure'
+include 'iam-rest-api'
+include 'iam-web'
