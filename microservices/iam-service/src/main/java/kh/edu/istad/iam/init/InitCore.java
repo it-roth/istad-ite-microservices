@@ -31,7 +31,7 @@ public class InitCore {
 
         Role role = Role.builder()
                 .role("ADMIN")
-                .description("Admin ng hz")
+                .description("jg yy jg hahh")
                 .build();
 
         User user = User.builder()
