@@ -426,7 +426,7 @@ public class User extends AggregateRoot<UserId> {
         private String zoneinfo;
         private String locale;
         private String phoneNumber;
-        private Boolean phoneNumberVerified;
+        private Boolean phoneNumberVerified = false;
         private String addressStreetAddress;
         private String addressLocality;
         private String addressRegion;

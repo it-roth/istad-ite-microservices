@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -34,29 +35,30 @@ public class PermissionRepositoryAdapter implements PermissionRepository {
 
     @Override
     public Optional<Permission> findById(Long id) {
-        return permissionJpaRepository.findById(id).map(mapper::toDomain);
+        return permissionJpaRepository.findByIdAndIsDeletedFalse(id).map(mapper::toDomain);
     }
 
     @Override
     public Optional<Permission> findByUuid(UUID uuid) {
-        return permissionJpaRepository.findByUuid(uuid).map(mapper::toDomain);
+        return permissionJpaRepository.findByUuidAndIsDeletedFalse(uuid).map(mapper::toDomain);
     }
 
     @Override
     public Optional<Permission> findByName(String name) {
-        return permissionJpaRepository.findByName(name).map(mapper::toDomain);
+        return permissionJpaRepository.findByNameAndIsDeletedFalse(name).map(mapper::toDomain);
     }
 
     @Override
     public List<Permission> findAllByIds(Collection<Long> ids) {
         return permissionJpaRepository.findAllById(ids).stream()
+                .filter(permission -> Boolean.FALSE.equals(permission.getIsDeleted()))
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<Permission> findAllByUuids(Collection<UUID> uuids) {
-        return permissionJpaRepository.findAllByUuidIn(uuids).stream()
+        return permissionJpaRepository.findAllByUuidInAndIsDeletedFalse(uuids).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
@@ -68,7 +70,12 @@ public class PermissionRepositoryAdapter implements PermissionRepository {
 
     @Override
     public PageResult<PermissionResult> findAll(PermissionFilterQuery query) {
-        PageRequest pageRequest = PageRequest.of(query.page(), query.size(), Sort.by("name").ascending());
+        Sort sort = PageSort.parse(
+                query.sort(),
+                Sort.by("name").ascending(),
+                Set.of("name", "resource", "action")
+        );
+        PageRequest pageRequest = PageRequest.of(query.page(), query.size(), sort);
         Page<PermissionJpaEntity> page = permissionJpaRepository.findAllPermissions(query.resource(), query.action(), pageRequest);
 
         List<PermissionResult> list = page.getContent().stream()
@@ -98,4 +105,3 @@ public class PermissionRepositoryAdapter implements PermissionRepository {
         );
     }
 }
-

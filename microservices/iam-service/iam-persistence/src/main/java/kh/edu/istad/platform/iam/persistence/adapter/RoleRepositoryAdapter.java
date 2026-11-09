@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -39,29 +40,30 @@ public class RoleRepositoryAdapter implements RoleRepository {
 
     @Override
     public Optional<Role> findById(Long id) {
-        return roleJpaRepository.findById(id).map(mapper::toDomain);
+        return roleJpaRepository.findByIdAndIsDeletedFalse(id).map(mapper::toDomain);
     }
 
     @Override
     public Optional<Role> findByUuid(UUID uuid) {
-        return roleJpaRepository.findByUuid(uuid).map(mapper::toDomain);
+        return roleJpaRepository.findByUuidAndIsDeletedFalse(uuid).map(mapper::toDomain);
     }
 
     @Override
     public Optional<Role> findByName(String name) {
-        return roleJpaRepository.findByName(name).map(mapper::toDomain);
+        return roleJpaRepository.findByNameAndIsDeletedFalse(name).map(mapper::toDomain);
     }
 
     @Override
     public List<Role> findAllByIds(Collection<Long> ids) {
         return roleJpaRepository.findAllById(ids).stream()
+                .filter(role -> Boolean.FALSE.equals(role.getIsDeleted()))
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<Role> findAllByUuids(Collection<UUID> uuids) {
-        return roleJpaRepository.findAllByUuidIn(uuids).stream()
+        return roleJpaRepository.findAllByUuidInAndIsDeletedFalse(uuids).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
@@ -73,7 +75,12 @@ public class RoleRepositoryAdapter implements RoleRepository {
 
     @Override
     public PageResult<RoleSummary> findAll(RoleFilterQuery query) {
-        PageRequest pageRequest = PageRequest.of(query.page(), query.size(), Sort.by("name").ascending());
+        Sort sort = PageSort.parse(
+                query.sort(),
+                Sort.by("name").ascending(),
+                Set.of("name", "isActive")
+        );
+        PageRequest pageRequest = PageRequest.of(query.page(), query.size(), sort);
         Page<RoleJpaEntity> page = roleJpaRepository.findAllRoles(query.name(), query.isActive(), pageRequest);
 
         List<RoleSummary> list = page.getContent().stream()
@@ -113,6 +120,7 @@ public class RoleRepositoryAdapter implements RoleRepository {
                             .revokedAt(e.getRevokedAt())
                             .revokedBy(e.getRevokedBy())
                             .reason(e.getReason())
+                            .version(e.getVersion())
                             .build();
                 })
                 .toList();
@@ -133,6 +141,7 @@ public class RoleRepositoryAdapter implements RoleRepository {
                             .revokedAt(e.getRevokedAt())
                             .revokedBy(e.getRevokedBy())
                             .reason(e.getReason())
+                            .version(e.getVersion())
                             .build();
                 })
                 .toList();
@@ -152,10 +161,10 @@ public class RoleRepositoryAdapter implements RoleRepository {
                             .revokedAt(a.getRevokedAt())
                             .revokedBy(a.getRevokedBy())
                             .reason(a.getReason())
+                            .version(a.getVersion())
                             .build();
                 })
                 .toList();
         rolePermissionRepo.saveAll(entities);
     }
 }
-

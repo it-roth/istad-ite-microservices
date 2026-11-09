@@ -11,10 +11,11 @@ import java.util.UUID;
 @Repository
 public interface IdentityJpaRepository extends JpaRepository<IdentityJpaEntity, Long> {
 
-    Optional<IdentityJpaEntity> findByUuid(UUID uuid);
+    Optional<IdentityJpaEntity> findByUuidAndIsDeletedFalse(UUID uuid);
+
+    Optional<IdentityJpaEntity> findByProviderAndProviderSubjectAndIsDeletedFalse(String provider, String providerSubject);
 
     Optional<IdentityJpaEntity> findByProviderAndProviderSubject(String provider, String providerSubject);
 
     List<IdentityJpaEntity> findAllByUserIdAndIsDeletedFalse(Long userId);
 }
-

@@ -16,6 +16,7 @@ public class UserPermissionAssignment extends BaseEntity<Long> {
     private LocalDateTime revokedAt;
     private String revokedBy;
     private String reason;
+    private Long version;
 
     private UserPermissionAssignment(Builder builder) {
         super.setId(builder.id);
@@ -29,6 +30,7 @@ public class UserPermissionAssignment extends BaseEntity<Long> {
         this.revokedAt = builder.revokedAt;
         this.revokedBy = builder.revokedBy;
         this.reason = builder.reason;
+        this.version = builder.version;
     }
 
     public static Builder builder() {
@@ -85,6 +87,9 @@ public class UserPermissionAssignment extends BaseEntity<Long> {
         return reason;
     }
 
+    public Long getVersion() {
+        return version;
+    }
 
     public void setInternalId(Long internalId) {
         this.internalId = internalId;
@@ -126,6 +131,9 @@ public class UserPermissionAssignment extends BaseEntity<Long> {
         this.reason = reason;
     }
 
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
     public static final class Builder {
         private Long id;
@@ -139,6 +147,7 @@ public class UserPermissionAssignment extends BaseEntity<Long> {
         private LocalDateTime revokedAt;
         private String revokedBy;
         private String reason;
+        private Long version;
 
         private Builder() {
         }
@@ -187,10 +196,13 @@ public class UserPermissionAssignment extends BaseEntity<Long> {
             reason = val;
             return this;
         }
+        public Builder version(Long val) {
+            version = val;
+            return this;
+        }
 
         public UserPermissionAssignment build() {
             return new UserPermissionAssignment(this);
         }
     }
 }
-

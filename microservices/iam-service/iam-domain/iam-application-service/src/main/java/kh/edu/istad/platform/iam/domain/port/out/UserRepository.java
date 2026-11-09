@@ -34,6 +34,7 @@ public interface UserRepository {
     void savePermissionAssignments(List<UserPermissionAssignment> assignments);
 
     Optional<Identity> findIdentityByProviderAndSubject(SocialProvider provider, String providerSubject);
+    Optional<Identity> findIdentityIncludingDeletedByProviderAndSubject(SocialProvider provider, String providerSubject);
     List<Identity> findIdentitiesByUserId(Long userId);
     Identity saveIdentity(Identity identity);
 }

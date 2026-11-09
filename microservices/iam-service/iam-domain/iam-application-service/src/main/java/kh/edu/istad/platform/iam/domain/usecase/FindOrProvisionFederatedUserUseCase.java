@@ -6,6 +6,7 @@ import kh.edu.istad.platform.iam.domain.dto.UserAuthoritiesResult;
 import kh.edu.istad.platform.iam.domain.entity.Identity;
 import kh.edu.istad.platform.iam.domain.entity.User;
 import kh.edu.istad.platform.iam.domain.entity.UserRoleAssignment;
+import kh.edu.istad.platform.iam.domain.exception.IamDomainException;
 import kh.edu.istad.platform.iam.domain.port.out.RoleRepository;
 import kh.edu.istad.platform.iam.domain.port.out.UserRepository;
 import kh.edu.istad.platform.iam.domain.valueobject.IdentityId;
@@ -13,6 +14,7 @@ import kh.edu.istad.platform.iam.domain.valueobject.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,16 +30,23 @@ public class FindOrProvisionFederatedUserUseCase {
     private final RoleRepository roleRepository;
     private final GetUserAuthoritiesUseCase getUserAuthoritiesUseCase;
 
+    @Transactional
     public AuthUserResult execute(FederatedIdentityCommand command) {
         log.info("Processing federated login for provider: {}, subject: {}", command.provider(), command.providerSubject());
         LocalDateTime now = LocalDateTime.now();
 
         // 1. Check if identity already exists
-        Optional<Identity> existingIdentity = userRepository.findIdentityByProviderAndSubject(command.provider(), command.providerSubject());
+        Optional<Identity> existingIdentity = userRepository.findIdentityIncludingDeletedByProviderAndSubject(
+                command.provider(),
+                command.providerSubject()
+        );
 
         User user;
         if (existingIdentity.isPresent()) {
             Identity identity = existingIdentity.get();
+            if (Boolean.TRUE.equals(identity.getDeleted())) {
+                throw new IamDomainException("This social identity has been unlinked and cannot sign in");
+            }
             identity.setLastLoginAt(now);
             identity.setUpdatedAt(now);
             userRepository.saveIdentity(identity);
@@ -48,8 +57,12 @@ public class FindOrProvisionFederatedUserUseCase {
                     });
         } else {
             // 2. Check if a user with this email already exists to link, otherwise provision a new user
-            Optional<User> existingUserByEmail = (command.email() != null && !command.email().isBlank())
-                    ? userRepository.findByEmail(command.email().toLowerCase().trim())
+            boolean emailVerified = Boolean.TRUE.equals(command.emailVerified());
+            String normalizedEmail = command.email() == null || command.email().isBlank()
+                    ? null
+                    : command.email().toLowerCase().trim();
+            Optional<User> existingUserByEmail = (emailVerified && normalizedEmail != null)
+                    ? userRepository.findByEmail(normalizedEmail)
                     : Optional.empty();
 
             if (existingUserByEmail.isPresent()) {
@@ -62,17 +75,23 @@ public class FindOrProvisionFederatedUserUseCase {
 
                 String givenName = command.displayName() != null ? command.displayName() : username;
                 String familyName = "";
+                String userEmail = normalizedEmail;
+                if (userEmail == null || userRepository.existsByEmail(userEmail)) {
+                    userEmail = command.provider().name().toLowerCase() + "_"
+                            + UUID.randomUUID().toString().replace("-", "") + "@social.local";
+                }
 
                 user = User.builder()
                         .id(new UserId(UUID.randomUUID()))
                         .username(username)
-                        .email(command.email() != null ? command.email().toLowerCase().trim() : username + "@social.local")
-                        .emailVerified(Boolean.TRUE.equals(command.emailVerified()))
+                        .email(userEmail)
+                        .emailVerified(emailVerified)
                         .passwordHash(null) // null for social-only users
                         .givenName(givenName)
                         .familyName(familyName)
                         .pictureUrl(command.pictureUrl())
                         .locale("en")
+                        .phoneNumberVerified(false)
                         .enabled(true)
                         .accountNonExpired(true)
                         .accountNonLocked(true)
@@ -143,4 +162,3 @@ public class FindOrProvisionFederatedUserUseCase {
         );
     }
 }
-

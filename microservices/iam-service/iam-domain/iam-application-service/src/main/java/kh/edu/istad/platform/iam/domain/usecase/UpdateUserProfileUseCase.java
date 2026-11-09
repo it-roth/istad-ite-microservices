@@ -12,11 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class UpdateUserProfileUseCase {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final UserRepository userRepository;
     private final CurrentActorProvider currentActorProvider;
@@ -28,13 +32,28 @@ public class UpdateUserProfileUseCase {
 
         String actor = currentActorProvider.getCurrentActor();
         LocalDateTime now = LocalDateTime.now();
+        String email = existing.getEmail();
+        Boolean emailVerified = existing.getEmailVerified();
+
+        if (command.email() != null) {
+            email = command.email().trim().toLowerCase(Locale.ROOT);
+            if (!EMAIL_PATTERN.matcher(email).matches()) {
+                throw new IamDomainException("Email address is invalid");
+            }
+            if (!email.equalsIgnoreCase(existing.getEmail())) {
+                if (userRepository.existsByEmail(email)) {
+                    throw new IamDomainException("Email address is already registered");
+                }
+                emailVerified = false;
+            }
+        }
 
         User.Builder builder = User.builder()
                 .id(existing.getId())
                 .internalId(existing.getInternalId())
                 .username(existing.getUsername())
-                .email(existing.getEmail())
-                .emailVerified(existing.getEmailVerified())
+                .email(email)
+                .emailVerified(emailVerified)
                 .passwordHash(existing.getPasswordHash())
                 .enabled(existing.getEnabled())
                 .accountNonExpired(existing.getAccountNonExpired())
@@ -76,4 +95,3 @@ public class UpdateUserProfileUseCase {
         return UserResultMapper.toResult(updatedUser);
     }
 }
-

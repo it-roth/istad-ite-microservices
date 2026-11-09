@@ -17,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class ApiSecurityConfig {
 
     private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
+    private final ApiProblemDetailHandler apiProblemDetailHandler;
 
     @Bean
     @Order(2)
@@ -28,10 +29,17 @@ public class ApiSecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                             .anyRequest().authenticated();
                 })
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(apiProblemDetailHandler)
+                        .accessDeniedHandler(apiProblemDetailHandler)
+                )
                 .oauth2ResourceServer(oauth2 -> {
-                    oauth2.jwt(jwt -> {
-                        jwt.jwtAuthenticationConverter(customJwtAuthenticationConverter);
-                    });
+                    oauth2
+                            .authenticationEntryPoint(apiProblemDetailHandler)
+                            .accessDeniedHandler(apiProblemDetailHandler)
+                            .jwt(jwt -> {
+                                jwt.jwtAuthenticationConverter(customJwtAuthenticationConverter);
+                            });
                 })
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> {
@@ -41,4 +49,3 @@ public class ApiSecurityConfig {
         return http.build();
     }
 }
-

@@ -16,11 +16,13 @@ import java.util.UUID;
 @Repository
 public interface PermissionJpaRepository extends JpaRepository<PermissionJpaEntity, Long> {
 
-    Optional<PermissionJpaEntity> findByUuid(UUID uuid);
+    Optional<PermissionJpaEntity> findByIdAndIsDeletedFalse(Long id);
 
-    Optional<PermissionJpaEntity> findByName(String name);
+    Optional<PermissionJpaEntity> findByUuidAndIsDeletedFalse(UUID uuid);
 
-    List<PermissionJpaEntity> findAllByUuidIn(Collection<UUID> uuids);
+    Optional<PermissionJpaEntity> findByNameAndIsDeletedFalse(String name);
+
+    List<PermissionJpaEntity> findAllByUuidInAndIsDeletedFalse(Collection<UUID> uuids);
 
     boolean existsByName(String name);
 
@@ -36,4 +38,3 @@ public interface PermissionJpaRepository extends JpaRepository<PermissionJpaEnti
             Pageable pageable
     );
 }
-

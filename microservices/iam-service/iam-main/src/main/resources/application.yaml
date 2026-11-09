@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 9000
 
 spring:
@@ -8,6 +8,8 @@ spring:
     active: dev
   config:
     import:
+      - "optional:file:.env[.properties]"
+      - "optional:file:../../../.env[.properties]"
       - "optional:consul:"
   cloud:
     consul:
@@ -23,9 +25,9 @@ spring:
         instance-id: ${spring.application.name}-${random.value}
 
   datasource:
-    url: jdbc:postgresql://localhost:9543/db_oauth2
-    username: iteuser
-    password: roth123
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:9543/db_oauth2}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -53,12 +55,38 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             client-name: Google
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
           github:
             provider: github
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
             client-name: GitHub
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - read:user
+              - user:email
+          facebook:
+            provider: facebook
+            client-id: ${FACEBOOK_CLIENT_ID}
+            client-secret: ${FACEBOOK_CLIENT_SECRET}
+            client-name: Facebook
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - email
+              - public_profile
+
+telegram:
+  bot-token: ${TELEGRAM_BOT_TOKEN}
+  bot-username: ${TELEGRAM_BOT_USERNAME}
+  public-base-url: ${TELEGRAM_PUBLIC_BASE_URL:https://labile-nervously-garrett.ngrok-free.dev}
+
+gg:
+  jte:
+    template-location: microservices/iam-service/iam-web/src/main/jte
+    development-mode: true
 
 logging:
   level:

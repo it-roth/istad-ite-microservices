@@ -14,18 +14,20 @@ import java.util.UUID;
 @Repository
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
-    Optional<UserJpaEntity> findByUuid(UUID uuid);
+    Optional<UserJpaEntity> findByIdAndIsDeletedFalse(Long id);
 
-    Optional<UserJpaEntity> findByUsername(String username);
+    Optional<UserJpaEntity> findByUuidAndIsDeletedFalse(UUID uuid);
 
-    Optional<UserJpaEntity> findByEmail(String email);
+    Optional<UserJpaEntity> findByUsernameAndIsDeletedFalse(String username);
 
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.username = :input OR LOWER(u.email) = LOWER(:input)")
+    Optional<UserJpaEntity> findByEmailAndIsDeletedFalse(String email);
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.isDeleted = false AND (u.username = :input OR LOWER(u.email) = LOWER(:input))")
     Optional<UserJpaEntity> findByUsernameOrEmail(@Param("input") String input);
 
     boolean existsByUsername(String username);
 
-    boolean existsByEmail(String email);
+    boolean existsByEmailIgnoreCase(String email);
 
     @Query("""
                 SELECT u FROM UserJpaEntity u

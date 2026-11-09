@@ -67,14 +67,12 @@ public class GetUserAuthoritiesUseCase {
             roleItems.add(new UserAuthoritiesResult.RoleAuthorityItem(
                     r.getId().value(),
                     r.getName(),
-                    a != null ? a.getExpiresAt() : null
-            ));
+                    a != null ? a.getExpiresAt() : null));
         }
 
         // 2. Load role permissions
         List<RolePermissionAssignment> rpa = roleRepository.findActiveRolePermissionAssignmentsByRoleIds(
-                activeRoles.stream().map(Role::getInternalId).toList()
-        );
+                activeRoles.stream().map(Role::getInternalId).toList());
         List<Long> rolePermIds = rpa.stream()
                 .map(RolePermissionAssignment::getPermissionId)
                 .distinct()
@@ -116,8 +114,7 @@ public class GetUserAuthoritiesUseCase {
             if (p != null && Boolean.TRUE.equals(p.getActive()) && !Boolean.TRUE.equals(p.getDeleted())) {
                 directPermItems.add(new UserAuthoritiesResult.DirectPermissionItem(
                         p.getName(),
-                        a.getEffect().name()
-                ));
+                        a.getEffect().name()));
                 if (a.getEffect() == PermissionEffect.GRANT) {
                     directGrant.add(p.getName());
                 } else if (a.getEffect() == PermissionEffect.DENY) {
@@ -130,8 +127,7 @@ public class GetUserAuthoritiesUseCase {
         Set<String> effectivePermissions = iamDomainService.calculateEffectivePermissions(
                 rolePermissionNames,
                 directGrant,
-                directDeny
-        );
+                directDeny);
 
         // 5. Build Spring Security authorities (ROLE_ + roleName and resource:action)
         Set<String> authorities = iamDomainService.buildAuthorities(activeRoles, effectivePermissions);
@@ -141,7 +137,6 @@ public class GetUserAuthoritiesUseCase {
                 roleItems,
                 directPermItems,
                 effectivePermissions,
-                authorities
-        );
+                authorities);
     }
 }

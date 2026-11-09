@@ -29,6 +29,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -51,22 +52,22 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public Optional<User> findById(Long id) {
-        return userJpaRepository.findById(id).map(userMapper::toDomain);
+        return userJpaRepository.findByIdAndIsDeletedFalse(id).map(userMapper::toDomain);
     }
 
     @Override
     public Optional<User> findByUuid(UUID uuid) {
-        return userJpaRepository.findByUuid(uuid).map(userMapper::toDomain);
+        return userJpaRepository.findByUuidAndIsDeletedFalse(uuid).map(userMapper::toDomain);
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return userJpaRepository.findByUsername(username).map(userMapper::toDomain);
+        return userJpaRepository.findByUsernameAndIsDeletedFalse(username).map(userMapper::toDomain);
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return userJpaRepository.findByEmail(email).map(userMapper::toDomain);
+        return userJpaRepository.findByEmailAndIsDeletedFalse(email).map(userMapper::toDomain);
     }
 
     @Override
@@ -81,12 +82,17 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public boolean existsByEmail(String email) {
-        return userJpaRepository.existsByEmail(email);
+        return userJpaRepository.existsByEmailIgnoreCase(email);
     }
 
     @Override
     public PageResult<UserSummary> findAll(UserFilterQuery query) {
-        PageRequest pageRequest = PageRequest.of(query.page(), query.size(), Sort.by("createdAt").descending());
+        Sort sort = PageSort.parse(
+                query.sort(),
+                Sort.by("createdAt").descending(),
+                Set.of("createdAt", "username", "email")
+        );
+        PageRequest pageRequest = PageRequest.of(query.page(), query.size(), sort);
         Page<UserJpaEntity> page = userJpaRepository.findAllUsers(query.query(), query.enabled(), pageRequest);
 
         List<UserSummary> list = page.getContent().stream()
@@ -129,6 +135,7 @@ public class UserRepositoryAdapter implements UserRepository {
                             .revokedAt(e.getRevokedAt())
                             .revokedBy(e.getRevokedBy())
                             .reason(e.getReason())
+                            .version(e.getVersion())
                             .build();
                 })
                 .toList();
@@ -150,6 +157,7 @@ public class UserRepositoryAdapter implements UserRepository {
                             .revokedAt(e.getRevokedAt())
                             .revokedBy(e.getRevokedBy())
                             .reason(e.getReason())
+                            .version(e.getVersion())
                             .build();
                 })
                 .toList();
@@ -169,6 +177,7 @@ public class UserRepositoryAdapter implements UserRepository {
                             .revokedAt(a.getRevokedAt())
                             .revokedBy(a.getRevokedBy())
                             .reason(a.getReason())
+                            .version(a.getVersion())
                             .build();
                 })
                 .toList();
@@ -190,6 +199,7 @@ public class UserRepositoryAdapter implements UserRepository {
                             .revokedAt(a.getRevokedAt())
                             .revokedBy(a.getRevokedBy())
                             .reason(a.getReason())
+                            .version(a.getVersion())
                             .build();
                 })
                 .toList();
@@ -198,6 +208,15 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public Optional<Identity> findIdentityByProviderAndSubject(SocialProvider provider, String providerSubject) {
+        return identityRepo.findByProviderAndProviderSubjectAndIsDeletedFalse(provider.name(), providerSubject)
+                .map(identityMapper::toDomain);
+    }
+
+    @Override
+    public Optional<Identity> findIdentityIncludingDeletedByProviderAndSubject(
+            SocialProvider provider,
+            String providerSubject
+    ) {
         return identityRepo.findByProviderAndProviderSubject(provider.name(), providerSubject)
                 .map(identityMapper::toDomain);
     }
@@ -216,4 +235,3 @@ public class UserRepositoryAdapter implements UserRepository {
         return identityMapper.toDomain(saved);
     }
 }
-

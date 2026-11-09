@@ -13,6 +13,7 @@ import kh.edu.istad.platform.iam.domain.valueobject.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +28,7 @@ public class RegisterUserUseCase {
     private final RoleRepository roleRepository;
     private final PasswordHasher passwordHasher;
 
+    @Transactional
     public UserResult execute(RegisterUserCommand command) {
         log.info("Executing RegisterUserUseCase for username: {}", command.username());
         if (userRepository.existsByUsername(command.username())) {
@@ -45,6 +47,7 @@ public class RegisterUserUseCase {
                 .givenName(command.givenName())
                 .familyName(command.familyName())
                 .locale(command.locale() == null ? "en" : command.locale())
+                .phoneNumberVerified(false)
                 .enabled(true)
                 .accountNonExpired(true)
                 .accountNonLocked(true)
@@ -75,4 +78,3 @@ public class RegisterUserUseCase {
         return UserResultMapper.toResult(savedUser);
     }
 }
-

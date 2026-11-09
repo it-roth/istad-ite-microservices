@@ -73,9 +73,10 @@ public class RoleController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) Boolean active
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) String sort
     ) {
-        RoleFilterQuery filterQuery = new RoleFilterQuery(query, active, page, size);
+        RoleFilterQuery filterQuery = new RoleFilterQuery(query, active, page, size, sort);
         PageResult<RoleSummary> result = listRolesUseCase.execute(filterQuery);
         PageResponse<RoleResponse> response = iamWebMapper.toPageResponse(result, iamWebMapper::toResponse);
         return ResponseEntity.ok(response);

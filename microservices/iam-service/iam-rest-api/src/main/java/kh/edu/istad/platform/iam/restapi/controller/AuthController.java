@@ -33,7 +33,7 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(
             @Valid @RequestBody RegisterUserRequest request
     ) {
-        if (!request.password().equals(request.confirmPassword())) {
+        if (request.password() != null && !request.password().equals(request.confirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
 

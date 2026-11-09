@@ -112,9 +112,10 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) Boolean enabled
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(required = false) String sort
     ) {
-        UserFilterQuery filterQuery = new UserFilterQuery(query, enabled, page, size);
+        UserFilterQuery filterQuery = new UserFilterQuery(query, enabled, page, size, sort);
         PageResult<UserSummary> result = listUsersUseCase.execute(filterQuery);
         PageResponse<UserSummary> response = iamWebMapper.toPageResponse(result, item -> {
             return item;

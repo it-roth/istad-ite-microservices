@@ -1,0 +1,1427 @@
+{
+  "info": {
+    "_postman_id": "7b8e5a10-82a1-4e7a-9a9c-1a2b3c4d5e6f",
+    "name": "IAM Service REST API",
+    "description": "Complete Postman collection for IAM Service based on Spring Authorization Server (OAuth 2.1 / OIDC 1.0). Follows Section D specifications with RFC 9457 Problem Details error responses.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.example",
+      "type": "string"
+    },
+    {
+      "key": "userUuid",
+      "value": "7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40",
+      "type": "string"
+    },
+    {
+      "key": "roleUuid",
+      "value": "0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11",
+      "type": "string"
+    },
+    {
+      "key": "permissionUuid",
+      "value": "5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55",
+      "type": "string"
+    },
+    {
+      "key": "identityUuid",
+      "value": "c4e8a2d1-7b3f-4e6a-9d20-5f1b8c3a7e90",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Authentication (Public)",
+      "item": [
+        {
+          "name": "POST /api/auth/register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"password\": \"Str0ng!Pass2026\",\n  \"confirmPassword\": \"Str0ng!Pass2026\",\n  \"givenName\": \"Dara\",\n  \"familyName\": \"Sok\",\n  \"locale\": \"km\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Registers a new user publicly without authentication."
+          },
+          "response": [
+            {
+              "name": "201 Created (UserResponse)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"password\": \"Str0ng!Pass2026\",\n  \"confirmPassword\": \"Str0ng!Pass2026\",\n  \"givenName\": \"Dara\",\n  \"familyName\": \"Sok\",\n  \"locale\": \"km\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "register"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"emailVerified\": false,\n  \"name\": \"Dara Sok\",\n  \"locale\": \"km\",\n  \"enabled\": true,\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"USER\"\n    }\n  ],\n  \"createdAt\": \"2026-11-05T02:15:00Z\",\n  \"updatedAt\": \"2026-11-05T02:15:00Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Users (Admin)",
+      "item": [
+        {
+          "name": "POST /api/users (Create User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"password\": \"Str0ng!Pass2026\",\n  \"givenName\": \"Dara\",\n  \"familyName\": \"Sok\",\n  \"gender\": \"male\",\n  \"birthdate\": \"2003-05-20\",\n  \"phoneNumber\": \"+85512345678\",\n  \"zoneinfo\": \"Asia/Phnom_Penh\",\n  \"locale\": \"km\",\n  \"address\": {\n    \"streetAddress\": \"No. 24, St. 562\",\n    \"locality\": \"Toul Kork\",\n    \"region\": \"Phnom Penh\",\n    \"postalCode\": \"120408\",\n    \"country\": \"KH\"\n  },\n  \"roleUuids\": [\n    \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Requires authority: user:create"
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"emailVerified\": false,\n  \"name\": \"Dara Sok\",\n  \"locale\": \"km\",\n  \"enabled\": true,\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"USER\"\n    }\n  ],\n  \"createdAt\": \"2026-11-05T02:15:00Z\",\n  \"updatedAt\": \"2026-11-05T02:15:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/users (List Users)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?page=0&size=20&query=sokdara&enabled=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "query",
+                  "value": "sokdara"
+                },
+                {
+                  "key": "enabled",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Requires authority: user:read"
+          },
+          "response": [
+            {
+              "name": "200 OK (PageResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"content\": [\n    {\n      \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n      \"username\": \"sokdara\",\n      \"email\": \"dara.sok@istad.co\",\n      \"fullName\": \"Dara Sok\",\n      \"enabled\": true\n    }\n  ],\n  \"page\": {\n    \"number\": 0,\n    \"size\": 20,\n    \"totalElements\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/users/{uuid}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}"]
+            },
+            "description": "Requires authority: user:read"
+          },
+          "response": [
+            {
+              "name": "200 OK (UserResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"emailVerified\": false,\n  \"name\": \"Dara Sok\",\n  \"locale\": \"km\",\n  \"enabled\": true,\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"USER\"\n    }\n  ],\n  \"createdAt\": \"2026-11-05T02:15:00Z\",\n  \"updatedAt\": \"2026-11-05T02:15:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/users/{uuid}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"givenName\": \"Dara\",\n  \"nickname\": \"Dara\",\n  \"phoneNumber\": \"+85512345678\",\n  \"locale\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "200 OK (UserResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"emailVerified\": false,\n  \"name\": \"Dara Sok\",\n  \"locale\": \"en\",\n  \"enabled\": true,\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"USER\"\n    }\n  ],\n  \"createdAt\": \"2026-11-05T02:15:00Z\",\n  \"updatedAt\": \"2026-11-05T02:15:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/users/{uuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}"]
+            },
+            "description": "Requires authority: user:delete"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/users/{uuid}/enable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/enable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "enable"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/users/{uuid}/disable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/disable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "disable"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/users/{uuid}/lock",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "lock"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/users/{uuid}/unlock",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/unlock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "unlock"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/users/{uuid}/password (Reset Password)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"N3w!Pass2026\",\n  \"confirmPassword\": \"N3w!Pass2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "password"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "GET /api/users/{uuid}/authorities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/authorities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "authorities"]
+            },
+            "description": "Requires authority: user:read. Returns active roles, direct permissions, and calculated effective permissions."
+          },
+          "response": [
+            {
+              "name": "200 OK (UserAuthoritiesResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"ADMIN\",\n      \"expiresAt\": \"2026-12-31T23:59:59Z\"\n    }\n  ],\n  \"directPermissions\": [\n    {\n      \"name\": \"report:read\",\n      \"effect\": \"GRANT\"\n    }\n  ],\n  \"effectivePermissions\": [\n    \"user:read\",\n    \"user:update\",\n    \"report:read\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/users/{uuid}/roles (Assign Roles)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleUuids\": [\n    \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\"\n  ],\n  \"expiresAt\": \"2026-12-31T23:59:59Z\",\n  \"reason\": \"Temporary admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "roles"]
+            },
+            "description": "Requires authority: user:assign"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": 1,\n    \"userUuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n    \"roleUuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n    \"assignedAt\": \"2026-11-08T00:00:00Z\",\n    \"expiresAt\": \"2026-12-31T23:59:59Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/users/{uuid}/roles/{roleUuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/roles/{{roleUuid}}?reason=Revoked by admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "roles", "{{roleUuid}}"],
+              "query": [
+                {
+                  "key": "reason",
+                  "value": "Revoked by admin"
+                }
+              ]
+            },
+            "description": "Requires authority: user:assign"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/users/{uuid}/permissions (Grant Permissions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionUuids\": [\n    \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\"\n  ],\n  \"effect\": \"GRANT\",\n  \"reason\": \"Needs to read reports\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "permissions"]
+            },
+            "description": "Requires authority: user:assign. Effect can be GRANT or DENY."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": 1,\n    \"userUuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n    \"permissionUuid\": \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\",\n    \"effect\": \"GRANT\",\n    \"assignedAt\": \"2026-11-08T00:00:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/users/{uuid}/permissions/{permissionUuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/permissions/{{permissionUuid}}?reason=Revoked by admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "permissions", "{{permissionUuid}}"],
+              "query": [
+                {
+                  "key": "reason",
+                  "value": "Revoked by admin"
+                }
+              ]
+            },
+            "description": "Requires authority: user:assign"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "GET /api/users/{uuid}/identities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/identities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "identities"]
+            },
+            "description": "Requires authority: user:read"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"uuid\": \"c4e8a2d1-7b3f-4e6a-9d20-5f1b8c3a7e90\",\n    \"provider\": \"GOOGLE\",\n    \"email\": \"dara.sok@gmail.com\",\n    \"displayName\": \"Dara Sok\",\n    \"linkedAt\": \"2026-11-05T02:30:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/users/{uuid}/identities/{identityUuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userUuid}}/identities/{{identityUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userUuid}}", "identities", "{{identityUuid}}"]
+            },
+            "description": "Requires authority: user:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Current User (/api/me)",
+      "item": [
+        {
+          "name": "GET /api/me (Current Profile)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            },
+            "description": "Requires authority: authenticated"
+          },
+          "response": [
+            {
+              "name": "200 OK (UserResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"emailVerified\": false,\n  \"name\": \"Dara Sok\",\n  \"locale\": \"km\",\n  \"enabled\": true,\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"USER\"\n    }\n  ],\n  \"createdAt\": \"2026-11-05T02:15:00Z\",\n  \"updatedAt\": \"2026-11-05T02:15:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/me (Update Current Profile)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"givenName\": \"Dara\",\n  \"nickname\": \"Dara\",\n  \"phoneNumber\": \"+85512345678\",\n  \"locale\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me"]
+            },
+            "description": "Requires authority: authenticated"
+          },
+          "response": [
+            {
+              "name": "200 OK (UserResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"7f3d2a10-91c4-4b0e-8d6f-2a9c5e1b7d40\",\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"emailVerified\": false,\n  \"name\": \"Dara Sok\",\n  \"locale\": \"en\",\n  \"enabled\": true,\n  \"roles\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"USER\"\n    }\n  ],\n  \"createdAt\": \"2026-11-05T02:15:00Z\",\n  \"updatedAt\": \"2026-11-05T02:15:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/me/password (Change Password)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Str0ng!Pass2026\",\n  \"newPassword\": \"N3w!Pass2026\",\n  \"confirmPassword\": \"N3w!Pass2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "password"]
+            },
+            "description": "Requires authority: authenticated"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "GET /api/me/identities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/identities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "identities"]
+            },
+            "description": "Requires authority: authenticated. Returns linked social accounts."
+          },
+          "response": [
+            {
+              "name": "200 OK (List<IdentityResponse>)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"uuid\": \"c4e8a2d1-7b3f-4e6a-9d20-5f1b8c3a7e90\",\n    \"provider\": \"GOOGLE\",\n    \"email\": \"dara.sok@gmail.com\",\n    \"displayName\": \"Dara Sok\",\n    \"linkedAt\": \"2026-11-05T02:30:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/me/identities/{identityUuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/identities/{{identityUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "identities", "{{identityUuid}}"]
+            },
+            "description": "Requires authority: authenticated. User cannot unlink their last sign-in method if no password is set."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Roles",
+      "item": [
+        {
+          "name": "POST /api/roles (Create Role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"CONTENT_MANAGER\",\n  \"description\": \"Manages course content\",\n  \"permissionUuids\": [\n    \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            },
+            "description": "Requires authority: role:create"
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n  \"name\": \"CONTENT_MANAGER\",\n  \"description\": \"Manages course content\",\n  \"active\": true,\n  \"system\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/roles (List Roles)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles?page=0&size=20&query=ADMIN&active=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "query",
+                  "value": "ADMIN"
+                },
+                {
+                  "key": "active",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Requires authority: role:read"
+          },
+          "response": [
+            {
+              "name": "200 OK (PageResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"content\": [\n    {\n      \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n      \"name\": \"ADMIN\",\n      \"active\": true\n    }\n  ],\n  \"page\": {\n    \"number\": 0,\n    \"size\": 20,\n    \"totalElements\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/roles/{uuid}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            },
+            "description": "Requires authority: role:read"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n  \"name\": \"ADMIN\",\n  \"description\": \"System administrator with full privileges\",\n  \"active\": true,\n  \"system\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/roles/{uuid}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated role description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            },
+            "description": "Requires authority: role:update"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n  \"name\": \"CONTENT_MANAGER\",\n  \"description\": \"Updated role description\",\n  \"active\": true,\n  \"system\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/roles/{uuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            },
+            "description": "Requires authority: role:delete"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/roles/{uuid}/activate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "activate"]
+            },
+            "description": "Requires authority: role:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/roles/{uuid}/deactivate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "deactivate"]
+            },
+            "description": "Requires authority: role:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/roles/{uuid}/permissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionUuids\": [\n    \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\"\n  ],\n  \"expiresAt\": \"2026-12-31T23:59:59Z\",\n  \"reason\": \"Course management permission\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "permissions"]
+            },
+            "description": "Requires authority: role:assign"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": 1,\n    \"roleUuid\": \"0b9e6c1a-6a57-4a8e-9e0b-3a0f4d6f2c11\",\n    \"permissionUuid\": \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\",\n    \"assignedAt\": \"2026-11-08T00:00:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/roles/{uuid}/permissions/{permissionUuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}/permissions/{{permissionUuid}}?reason=Revoked by admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}", "permissions", "{{permissionUuid}}"],
+              "query": [
+                {
+                  "key": "reason",
+                  "value": "Revoked by admin"
+                }
+              ]
+            },
+            "description": "Requires authority: role:assign"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Permissions",
+      "item": [
+        {
+          "name": "POST /api/permissions (Create Permission)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"course\",\n  \"action\": \"publish\",\n  \"description\": \"Publish a course\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"]
+            },
+            "description": "Requires authority: permission:create"
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\",\n  \"name\": \"course:publish\",\n  \"resource\": \"course\",\n  \"action\": \"publish\",\n  \"description\": \"Publish a course\",\n  \"active\": true,\n  \"system\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/permissions (List Permissions)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions?page=0&size=20&resource=user&action=read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "resource",
+                  "value": "user"
+                },
+                {
+                  "key": "action",
+                  "value": "read"
+                }
+              ]
+            },
+            "description": "Requires authority: permission:read"
+          },
+          "response": [
+            {
+              "name": "200 OK (PageResponse)",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"content\": [\n    {\n      \"uuid\": \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\",\n      \"name\": \"user:read\",\n      \"resource\": \"user\",\n      \"action\": \"read\",\n      \"description\": \"Read user details\",\n      \"active\": true,\n      \"system\": true\n    }\n  ],\n  \"page\": {\n    \"number\": 0,\n    \"size\": 20,\n    \"totalElements\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/permissions/{uuid}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}"]
+            },
+            "description": "Requires authority: permission:read"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\",\n  \"name\": \"course:publish\",\n  \"resource\": \"course\",\n  \"action\": \"publish\",\n  \"description\": \"Publish a course\",\n  \"active\": true,\n  \"system\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/permissions/{uuid}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated permission description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}"]
+            },
+            "description": "Requires authority: permission:update"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"uuid\": \"5d1c2f0e-2b8a-4c3e-9f61-7e2d9a0b4c55\",\n  \"name\": \"course:publish\",\n  \"resource\": \"course\",\n  \"action\": \"publish\",\n  \"description\": \"Updated permission description\",\n  \"active\": true,\n  \"system\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/permissions/{uuid}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}"]
+            },
+            "description": "Requires authority: permission:delete"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/permissions/{uuid}/activate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}", "activate"]
+            },
+            "description": "Requires authority: permission:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/permissions/{uuid}/deactivate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/{{permissionUuid}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", "{{permissionUuid}}", "deactivate"]
+            },
+            "description": "Requires authority: permission:update"
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Error Handling (RFC 9457 Problem Details)",
+      "item": [
+        {
+          "name": "400 Validation Error",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"\",\n  \"email\": \"invalid-email\",\n  \"password\": \"short\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request (RFC 9457)",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                }
+              ],
+              "body": "{\n  \"type\": \"https://iam.istad.co/problems/validation-error\",\n  \"title\": \"Validation failed\",\n  \"status\": 400,\n  \"errors\": [\n    {\n      \"field\": \"email\",\n      \"message\": \"must be a well-formed email address\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "404 Resource Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": [
+            {
+              "name": "404 Not Found (RFC 9457)",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                }
+              ],
+              "body": "{\n  \"type\": \"https://iam.istad.co/problems/resource-not-found\",\n  \"title\": \"Resource not found\",\n  \"status\": 404,\n  \"detail\": \"User not found with uuid 00000000-0000-0000-0000-000000000000\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "409 Resource Conflict",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sokdara\",\n  \"email\": \"dara.sok@istad.co\",\n  \"password\": \"Str0ng!Pass2026\",\n  \"confirmPassword\": \"Str0ng!Pass2026\",\n  \"givenName\": \"Dara\",\n  \"familyName\": \"Sok\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": [
+            {
+              "name": "409 Conflict (RFC 9457)",
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                }
+              ],
+              "body": "{\n  \"type\": \"https://iam.istad.co/problems/conflict\",\n  \"title\": \"Resource conflict\",\n  \"status\": 409,\n  \"detail\": \"Username 'sokdara' already exists\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "403 Forbidden (System Protection)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/{{roleUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "{{roleUuid}}"]
+            }
+          },
+          "response": [
+            {
+              "name": "403 Forbidden (RFC 9457)",
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                }
+              ],
+              "body": "{\n  \"type\": \"https://iam.istad.co/problems/forbidden-operation\",\n  \"title\": \"Operation not allowed\",\n  \"status\": 403,\n  \"detail\": \"System roles cannot be deleted\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

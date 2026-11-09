@@ -16,6 +16,7 @@ import kh.edu.istad.platform.iam.domain.valueobject.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class CreateUserUseCase {
     private final CurrentActorProvider currentActorProvider;
     private final IamDomainService iamDomainService;
 
+    @Transactional
     public UserResult execute(CreateUserCommand command) {
         log.info("Executing CreateUserUseCase for username: {}", command.username());
         if (userRepository.existsByUsername(command.username())) {
@@ -102,4 +104,3 @@ public class CreateUserUseCase {
         return UserResultMapper.toResult(savedUser);
     }
 }
-

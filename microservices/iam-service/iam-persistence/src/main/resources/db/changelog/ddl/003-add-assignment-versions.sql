@@ -1,0 +1,8 @@
+ALTER TABLE user_roles
+    ADD COLUMN version BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE role_permissions
+    ADD COLUMN version BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE user_permissions
+    ADD COLUMN version BIGINT NOT NULL DEFAULT 0;

@@ -4,6 +4,10 @@ public record PermissionFilterQuery(
         String resource,
         String action,
         int page,
-        int size
-) {}
-
+        int size,
+        String sort
+) {
+    public PermissionFilterQuery(String resource, String action, int page, int size) {
+        this(resource, action, page, size, null);
+    }
+}

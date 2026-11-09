@@ -2,6 +2,7 @@ package kh.edu.istad.platform.iam.restapi.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 import java.util.UUID;
@@ -11,10 +12,10 @@ public record GrantPermissionsToUserRequest(
         List<UUID> permissionUuids,
 
         @NotBlank(message = "Effect must be either GRANT or DENY")
+        @Pattern(regexp = "(?i)GRANT|DENY", message = "Effect must be either GRANT or DENY")
         String effect,
 
         String reason
 ) {
 }
-
 

@@ -13,6 +13,7 @@ import kh.edu.istad.platform.iam.domain.valueobject.IdentityId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +28,7 @@ public class LinkIdentityUseCase {
     private final CurrentActorProvider currentActorProvider;
     private final IamDomainService iamDomainService;
 
+    @Transactional
     public IdentityResult execute(UUID userUuid, FederatedIdentityCommand command) {
         log.info("Linking identity {} to user UUID: {}", command.provider(), userUuid);
         User user = userRepository.findByUuid(userUuid)
@@ -35,11 +37,40 @@ public class LinkIdentityUseCase {
                 });
 
         List<Identity> existingIdentities = userRepository.findIdentitiesByUserId(user.getInternalId());
-        iamDomainService.validateProviderNotAlreadyLinked(existingIdentities, command.provider());
-
         String actor = currentActorProvider.getCurrentActor();
         LocalDateTime now = LocalDateTime.now();
 
+        var existingIdentity = userRepository.findIdentityIncludingDeletedByProviderAndSubject(
+                command.provider(),
+                command.providerSubject()
+        );
+        if (existingIdentity.isPresent()) {
+            Identity identity = existingIdentity.get();
+            if (!user.getInternalId().equals(identity.getUserId())) {
+                throw new IamDomainException("This social identity is already linked to another account");
+            }
+            if (!Boolean.TRUE.equals(identity.getDeleted())) {
+                throw new IamDomainException("This social identity is already linked to this account");
+            }
+
+            iamDomainService.validateProviderNotAlreadyLinked(existingIdentities, command.provider());
+            identity.setEmail(command.email());
+            identity.setEmailVerified(Boolean.TRUE.equals(command.emailVerified()));
+            identity.setDisplayName(command.displayName());
+            identity.setUsername(command.username());
+            identity.setPictureUrl(command.pictureUrl());
+            identity.setAttributes(command.attributes());
+            identity.setLinkedAt(now);
+            identity.setLastLoginAt(now);
+            identity.setDeleted(false);
+            identity.setDeletedAt(null);
+            identity.setDeletedBy(null);
+            identity.setUpdatedAt(now);
+            identity.setUpdatedBy(actor);
+            return IdentityResultMapper.toResult(userRepository.saveIdentity(identity));
+        }
+
+        iamDomainService.validateProviderNotAlreadyLinked(existingIdentities, command.provider());
         Identity identity = Identity.builder()
                 .id(new IdentityId(UUID.randomUUID()))
                 .userId(user.getInternalId())
@@ -64,4 +95,3 @@ public class LinkIdentityUseCase {
         return IdentityResultMapper.toResult(userRepository.saveIdentity(identity));
     }
 }
-

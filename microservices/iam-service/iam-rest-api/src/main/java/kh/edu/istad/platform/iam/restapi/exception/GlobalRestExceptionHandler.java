@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -35,6 +36,19 @@ public class GlobalRestExceptionHandler {
 
         problemDetail.setProperty("errors", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> handleUnreadableRequestBody(
+            HttpMessageNotReadableException ex
+    ) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "The request body is missing or malformed"
+        );
+        problemDetail.setType(URI.create("https://iam.istad.co/problems/malformed-request"));
+        problemDetail.setTitle("Malformed request");
+        return ResponseEntity.badRequest().body(problemDetail);
     }
 
     @ExceptionHandler(DomainException.class)
@@ -136,7 +150,7 @@ public class GlobalRestExceptionHandler {
         log.error("Internal server error: ", ex);
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected internal error occurred"
+                "An unexpected error occurred"
         );
         problemDetail.setType(URI.create("https://iam.istad.co/problems/internal-error"));
         problemDetail.setTitle("Internal server error");

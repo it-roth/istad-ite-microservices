@@ -16,11 +16,13 @@ import java.util.UUID;
 @Repository
 public interface RoleJpaRepository extends JpaRepository<RoleJpaEntity, Long> {
 
-    Optional<RoleJpaEntity> findByUuid(UUID uuid);
+    Optional<RoleJpaEntity> findByIdAndIsDeletedFalse(Long id);
 
-    Optional<RoleJpaEntity> findByName(String name);
+    Optional<RoleJpaEntity> findByUuidAndIsDeletedFalse(UUID uuid);
 
-    List<RoleJpaEntity> findAllByUuidIn(Collection<UUID> uuids);
+    Optional<RoleJpaEntity> findByNameAndIsDeletedFalse(String name);
+
+    List<RoleJpaEntity> findAllByUuidInAndIsDeletedFalse(Collection<UUID> uuids);
 
     boolean existsByName(String name);
 
@@ -36,4 +38,3 @@ public interface RoleJpaRepository extends JpaRepository<RoleJpaEntity, Long> {
             Pageable pageable
     );
 }
-

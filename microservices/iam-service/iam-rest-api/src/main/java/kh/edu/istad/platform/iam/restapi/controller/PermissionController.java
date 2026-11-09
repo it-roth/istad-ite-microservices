@@ -64,9 +64,10 @@ public class PermissionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String resource,
-            @RequestParam(required = false) String action
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String sort
     ) {
-        PermissionFilterQuery filterQuery = new PermissionFilterQuery(resource, action, page, size);
+        PermissionFilterQuery filterQuery = new PermissionFilterQuery(resource, action, page, size, sort);
         PageResult<PermissionResult> result = listPermissionsUseCase.execute(filterQuery);
         PageResponse<PermissionResponse> response = iamWebMapper.toPageResponse(result, iamWebMapper::toResponse);
         return ResponseEntity.ok(response);
