@@ -5,15 +5,12 @@ spring:
     name: gateway-server
   profiles:
     active: dev
-  config:
-    import:
-      - "optional:consul:"
   cloud:
     consul:
       discovery:
         health-check-url: http://host.docker.internal:${server.port}/actuator/health
         prefer-ip-address: true
-        service-name: gateway-server
+        service-name: ${spring.application.name}
         instance-id: ${spring.application.name}-${random.value}
     gateway:
       server:
@@ -25,30 +22,57 @@ spring:
               enabled: true
               lower-case-service-id: true
           routes:
+            - id: business-service-demo
+              uri: lb://business-service
+              predicates:
+                - Path=/api/demo
+
             - id: my-order-service
               uri: lb://order-service
               predicates:
-                - Path=/my-order/**
+                - Path=/my-orders/**
               filters:
-                - RewritePath=/my-order/(?<segment>.*), /${segment}
-#                - SaveSession
+                - RewritePath=/my-orders/?(?<segment>.*), /$\{segment}
+                #- SaveSession
             - id: json-placeholder
               uri: https://jsonplaceholder.typicode.com
               predicates:
                 - Path=/jph/**
               filters:
-                - RewritePath=/jph/(?<segment>.*), /${segment}
-            - id: nextjs
-              uri: http://localhost:3000
-              predicates:
-                - Path=/**
+                - RewritePath=/jph/?(?<segment>.*), /$\{segment}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:39000
+      client:
+        provider:
+          iam-service:
+            issuer-uri: http://localhost:39000
+        registration:
+          front-bff-client:
+            provider: iam-service
+            client-id: front-bff-client
+            client-secret: front-bff-secret
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:9999/login/oauth2/code/front-bff-client"
+            scope:
+              - openid
+              - profile
+
 
 
 management:
   endpoints:
     web:
       exposure:
-        include: "health,gateway"
+        include: "health, gateway"
   endpoint:
     gateway:
       access: read_only
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2.client: TRACE

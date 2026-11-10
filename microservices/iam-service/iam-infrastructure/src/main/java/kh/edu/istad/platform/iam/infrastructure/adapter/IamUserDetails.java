@@ -1,4 +1,4 @@
-package kh.edu.istad.platform.iam.infrastructure.security.userdetails;
+package kh.edu.istad.platform.iam.infrastructure.adapter;
 
 import kh.edu.istad.platform.iam.domain.dto.AuthUserResult;
 import lombok.Getter;

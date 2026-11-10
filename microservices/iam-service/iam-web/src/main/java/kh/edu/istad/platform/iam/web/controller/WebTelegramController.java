@@ -61,7 +61,13 @@ public class WebTelegramController {
             return "redirect:" + publicLoginUri;
         }
 
-        model.addAttribute("botUsername", botUsername);
+        model.addAttribute("botUsername", botUsername.startsWith("@")
+                ? botUsername.substring(1)
+                : botUsername);
+        model.addAttribute(
+                "telegramAuthUrl",
+                URI.create(telegramPublicBaseUrl).resolve("/login/telegram/callback").toString()
+        );
         return "telegram-login";
     }
 

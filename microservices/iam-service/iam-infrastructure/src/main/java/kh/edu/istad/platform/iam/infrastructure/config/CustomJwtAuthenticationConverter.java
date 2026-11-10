@@ -1,4 +1,4 @@
-package kh.edu.istad.platform.iam.infrastructure.security;
+package kh.edu.istad.platform.iam.infrastructure.config;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -77,4 +77,3 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
         return authorities;
     }
 }
-

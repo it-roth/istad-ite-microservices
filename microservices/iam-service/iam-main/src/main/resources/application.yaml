@@ -1,5 +1,5 @@
 ﻿server:
-  port: 9000
+  port: 39000
 
 spring:
   application:
@@ -46,7 +46,7 @@ spring:
   security:
     oauth2:
       authorizationserver:
-        issuer: http://localhost:9000
+        issuer: http://localhost:39000
       client:
         registration:
           google:
@@ -91,3 +91,6 @@ gg:
 logging:
   level:
     org.springframework.security: INFO
+    org.springframework.security.oauth2.client: TRACE
+    org.springframework.security.oauth2.client.web: TRACE
+    org.springframework.security.web.FilterChainProxy: DEBUG

@@ -28,7 +28,7 @@ The service is a Gradle multi-project Spring Boot application. Requests are hand
 
 ## Main routes
 
-The default local service URL and OAuth issuer are `http://localhost:9000`.
+The default local service URL and OAuth issuer are `http://localhost:39000`.
 
 | Route | Purpose | Access |
 | --- | --- | --- |
@@ -65,7 +65,8 @@ Set configuration in the process environment or a local `.env` file. Do not comm
 | `IAM_DCR_CLIENT_SECRET` | Yes | Secret for the initial Dynamic Client Registration client |
 | `IAM_DCR_CLIENT_ID` | No | Initial registration client ID; defaults to `initial-client` |
 | `IAM_JWK_PRIVATE_KEY` | Production | RSA PKCS#8 PEM private key used to sign tokens |
-| `SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER` | No | Public issuer URL; defaults to `http://localhost:9000` |
+| `IAM_PUBLIC_BASE_URL` | No | Public base URL used for social-login callbacks; defaults to `http://localhost:39000` |
+| `SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER` | No | Public issuer URL; defaults to `http://localhost:39000` |
 
 The application imports optional `.env` files from its working directory and the repository-level microservices directory. It also has optional Consul configuration integration. Social-login redirect URIs must be registered with each provider and match `{baseUrl}/login/oauth2/code/{registrationId}`.
 
@@ -79,7 +80,7 @@ From the repository root in PowerShell, configure the required environment varia
 .\gradlew.bat -p microservices :iam-service:iam-main:bootRun
 ```
 
-The web pages are available at `http://localhost:9000`. Select English or Khmer with `?lang=en` or `?lang=km`; the selection is stored in the `APP_LOCALE` cookie.
+The web pages are available at `http://localhost:39000`. Select English or Khmer with `?lang=en` or `?lang=km`; the selection is stored in the `APP_LOCALE` cookie.
 
 ## Test
 

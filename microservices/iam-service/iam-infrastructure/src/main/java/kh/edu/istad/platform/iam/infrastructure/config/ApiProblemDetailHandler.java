@@ -1,4 +1,4 @@
-package kh.edu.istad.platform.iam.infrastructure.security;
+package kh.edu.istad.platform.iam.infrastructure.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

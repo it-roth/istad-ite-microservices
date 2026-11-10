@@ -1,6 +1,7 @@
 @param kh.edu.istad.platform.iam.web.i18n.I18nMessages msg
 @param String currentLang = "en"
 @param String botUsername
+@param String telegramAuthUrl
 
 <!DOCTYPE html>
 <html lang="${currentLang}">
@@ -49,7 +50,7 @@
                 <script async src="https://telegram.org/js/telegram-widget.js?22"
                         data-telegram-login="${botUsername}"
                         data-size="large"
-                        data-auth-url="/login/telegram/callback"
+                        data-auth-url="${telegramAuthUrl}"
                         data-request-access="write"></script>
             </div>
 

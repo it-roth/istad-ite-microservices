@@ -1,10 +1,10 @@
-package kh.edu.istad.platform.iam.infrastructure.security.token;
+package kh.edu.istad.platform.iam.infrastructure.config;
 
 import kh.edu.istad.platform.iam.domain.dto.UserAuthoritiesResult;
 import kh.edu.istad.platform.iam.domain.entity.User;
 import kh.edu.istad.platform.iam.domain.port.out.UserRepository;
 import kh.edu.istad.platform.iam.domain.usecase.GetUserAuthoritiesUseCase;
-import kh.edu.istad.platform.iam.infrastructure.security.userdetails.IamUserDetails;
+import kh.edu.istad.platform.iam.infrastructure.adapter.IamUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -15,7 +15,6 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -168,9 +167,6 @@ public class IamOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEncodi
         }
         if (user.getLocale() != null) {
             context.getClaims().claim("locale", user.getLocale());
-        }
-        if (user.getUpdatedAt() != null) {
-            context.getClaims().claim("updated_at", user.getUpdatedAt().toEpochSecond(ZoneOffset.UTC));
         }
     }
 

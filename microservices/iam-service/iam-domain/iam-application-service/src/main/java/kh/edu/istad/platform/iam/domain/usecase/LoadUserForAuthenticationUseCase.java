@@ -18,8 +18,11 @@ public class LoadUserForAuthenticationUseCase {
     private final GetUserAuthoritiesUseCase getUserAuthoritiesUseCase;
 
     public AuthUserResult execute(String usernameOrEmail) {
-        log.info("Loading user for authentication: {}", usernameOrEmail);
-        User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
+        String normalizedUsernameOrEmail = usernameOrEmail == null
+                ? null
+                : usernameOrEmail.trim();
+        log.info("Loading user for authentication: {}", normalizedUsernameOrEmail);
+        User user = userRepository.findByUsernameOrEmail(normalizedUsernameOrEmail)
                 .orElseThrow(() -> {
                     return new IamDomainException("Invalid username or password");
                 });
@@ -39,4 +42,3 @@ public class LoadUserForAuthenticationUseCase {
         );
     }
 }
-

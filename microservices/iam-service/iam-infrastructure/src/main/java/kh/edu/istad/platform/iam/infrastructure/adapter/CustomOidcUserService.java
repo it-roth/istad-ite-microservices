@@ -1,4 +1,4 @@
-package kh.edu.istad.platform.iam.infrastructure.security.social;
+package kh.edu.istad.platform.iam.infrastructure.adapter;
 
 import kh.edu.istad.platform.iam.domain.dto.AuthUserResult;
 import kh.edu.istad.platform.iam.domain.dto.FederatedIdentityCommand;
@@ -9,39 +9,39 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class CustomOidcUserService extends OidcUserService {
 
     private final FindOrProvisionFederatedUserUseCase findOrProvisionFederatedUserUseCase;
     private final LinkFederatedIdentityUseCase linkFederatedIdentityUseCase;
     private final SocialProfileExtractor socialProfileExtractor;
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
+    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+        OidcUser oidcUser = super.loadUser(userRequest);
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        log.info("Processing OAuth2 login for registrationId: {}", registrationId);
+        log.info("Processing OIDC login for registrationId: {}", registrationId);
 
         FederatedIdentityCommand command = socialProfileExtractor.extract(
                 registrationId,
-                oAuth2User.getAttributes()
+                oidcUser.getAttributes()
         );
 
         AuthUserResult authUser = resolveUser(command);
 
         return new IamOAuth2User(
                 authUser,
-                oAuth2User.getAttributes(),
-                null,
-                null
+                oidcUser.getAttributes(),
+                oidcUser.getIdToken(),
+                oidcUser.getUserInfo()
         );
     }
 
