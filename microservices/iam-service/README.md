@@ -32,8 +32,10 @@ The default local service URL and OAuth issuer are `http://localhost:39000`.
 
 | Route | Purpose | Access |
 | --- | --- | --- |
-| `/login`, `/register` | Browser sign-in and registration | Public |
-| `/` | Signed-in user dashboard | Sign-in required |
+| `/login` | JTE browser sign-in form | Public |
+| `/register` | Browser registration | Public |
+| `/` | React frontend | Public |
+| `/dashboard` | React account dashboard | Sign-in required |
 | `/profile/edit`, `/profile/password` | Edit profile and change password | Sign-in required |
 | `/profile/accounts`, `/profile/apps` | Manage linked identities and connected-app consent | Sign-in required |
 | `/api/auth/register` | Register a user through the REST API | Public |
@@ -49,6 +51,12 @@ The Authorization Server exposes its OAuth and OpenID Connect endpoints at the c
 REST endpoints other than `/api/auth/register` require a bearer access token. Administrative endpoints also check fine-grained authorities such as `user:read`, `role:create`, and `permission:update`. List endpoints support pagination with `page` and `size` (defaults: `0` and `20`); supported sort fields are allow-listed by resource.
 
 ## Configuration
+
+Additional security APIs are available for the account console:
+`/api/me/connected-applications`, `/api/me/sessions`, `/api/me/login-history`, and
+`/api/me/activity`. Administrators can manage OAuth/OIDC clients at
+`/api/admin/oauth-clients` and system policy at
+`/api/admin/security/configuration`.
 
 Set configuration in the process environment or a local `.env` file. Do not commit credentials, private signing keys, or production secrets.
 
@@ -81,6 +89,8 @@ From the repository root in PowerShell, configure the required environment varia
 ```
 
 The web pages are available at `http://localhost:39000`. Select English or Khmer with `?lang=en` or `?lang=km`; the selection is stored in the `APP_LOCALE` cookie.
+
+The React frontend is served at `http://localhost:39000/` and `http://localhost:39000/dashboard`; JTE is used only for the `/login` form. For frontend-only development, run `npm ci` and `npm run dev` from `iam-web/src/main/iam-web-frontend`.
 
 ## Test
 

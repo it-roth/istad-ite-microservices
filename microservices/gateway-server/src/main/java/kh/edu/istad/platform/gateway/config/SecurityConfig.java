@@ -1,5 +1,4 @@
-package kh.edu.istad.platform.gatewayserver.config;
-
+package kh.edu.istad.platform.gateway.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -20,10 +19,10 @@ public class SecurityConfig {
     private final ReactiveClientRegistrationRepository clientRegistrationRepository;
 
     @Bean
-    public SecurityWebFilterChain gatewayFilterChain(ServerHttpSecurity http){
+    public SecurityWebFilterChain gatewayFilterChain(ServerHttpSecurity http) {
         return http
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers( "/actuator/health/**").permitAll()
+                        .pathMatchers("/actuator/health/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
@@ -33,17 +32,6 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                 )
-                .logout(logoutSpec -> logoutSpec
-                        .logoutSuccessHandler(oidcLogoutSuccessHandler())
-                )
                 .build();
-    }
-    private ServerLogoutSuccessHandler oidcLogoutSuccessHandler() {
-        OidcClientInitiatedServerLogoutSuccessHandler oidcLogoutSuccessHandler =
-                new OidcClientInitiatedServerLogoutSuccessHandler(this.clientRegistrationRepository);
-
-        oidcLogoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}");
-
-        return oidcLogoutSuccessHandler;
     }
 }

@@ -23,12 +23,14 @@ public class WebConsentController {
     @GetMapping("/oauth2/consent")
     public String consent(
             Principal principal,
+            java.util.Locale locale,
             Model model,
             @RequestParam("client_id") String clientId,
             @RequestParam("scope") String scope,
             @RequestParam("state") String state,
             @RequestParam(name = "user_code", required = false) String userCode
     ) {
+        model.addAttribute("currentLang", locale != null ? locale.getLanguage() : "en");
         Set<String> requestedScopes = Arrays.stream(StringUtils.delimitedListToStringArray(scope, " "))
                 .filter(StringUtils::hasText)
                 .collect(Collectors.toSet());

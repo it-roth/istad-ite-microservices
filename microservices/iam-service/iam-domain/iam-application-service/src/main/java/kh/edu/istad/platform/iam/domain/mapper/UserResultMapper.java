@@ -35,7 +35,13 @@ public final class UserResultMapper {
                 user.getAccountNonLocked(),
                 user.getLastLoginAt(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
+                user.getUpdatedAt(),
+                user.getAddressStreetAddress(),
+                user.getAddressLocality(),
+                user.getAddressRegion(),
+                user.getAddressPostalCode(),
+                user.getAddressCountry(),
+                user.getTwoFactorEnabled()
         );
     }
 

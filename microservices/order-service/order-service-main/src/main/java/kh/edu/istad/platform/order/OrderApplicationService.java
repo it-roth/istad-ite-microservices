@@ -10,7 +10,7 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 @SpringBootApplication
 public class OrderApplicationService {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(OrderApplicationService.class, args);
     }
 

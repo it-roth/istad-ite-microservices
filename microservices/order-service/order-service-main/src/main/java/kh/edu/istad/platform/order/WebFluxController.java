@@ -6,6 +6,8 @@ import kh.edu.istad.platform.order.domain.port.out.client.CustomerServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
@@ -28,10 +30,14 @@ public class WebFluxController {
 
 
     @GetMapping("/flux")
-    public Flux<String> getFluxData() {
-        return Flux.just("A", "B", "C", "D", "E", "F")
-                .log()
-                .delayElements(Duration.ofSeconds(1));
+    public Mono<Map<String, Object>> getDemo(@AuthenticationPrincipal Mono<Jwt> jwtMono) {
+        return jwtMono
+                .map(Jwt::getTokenValue)
+                .defaultIfEmpty("No Token")
+                .map(token -> Map.of(
+                        "accessToken", token,
+                        "message", "Hello from Order Service"
+                ));
     }
 
 //    @Value("${global.version}")

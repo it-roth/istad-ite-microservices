@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: 39000
 
 spring:
@@ -23,6 +23,22 @@ spring:
         prefer-ip-address: true
         service-name: iam-service
         instance-id: ${spring.application.name}-${random.value}
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_AUTH:true}
+          starttls:
+            enable: ${MAIL_STARTTLS_ENABLE:true}
+            required: ${MAIL_STARTTLS_REQUIRED:true}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:9543/db_oauth2}

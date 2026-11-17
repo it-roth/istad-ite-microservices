@@ -9,8 +9,13 @@ public record ResetPasswordRequest(
         String newPassword,
 
         @NotBlank(message = "Confirm password is required")
-        String confirmPassword
+        String confirmPassword,
+
+        String code
 ) {
+    public ResetPasswordRequest(String newPassword, String confirmPassword) {
+        this(newPassword, confirmPassword, null);
+    }
 }
 
 

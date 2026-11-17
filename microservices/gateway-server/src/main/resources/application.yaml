@@ -15,31 +15,36 @@ spring:
     gateway:
       server:
         webflux:
+          trusted-proxies: .*
           default-filters:
             - SaveSession
+            - TokenRelay
           discovery:
             locator:
               enabled: true
               lower-case-service-id: true
           routes:
-            - id: business-service-demo
-              uri: lb://business-service
-              predicates:
-                - Path=/api/demo
-
-            - id: my-order-service
-              uri: lb://order-service
-              predicates:
-                - Path=/my-orders/**
-              filters:
-                - RewritePath=/my-orders/?(?<segment>.*), /$\{segment}
-                #- SaveSession
+#            - id: business-service-api
+#              uri: lb://business-service
+#              predicates:
+#                - Path=/api/**
+#            - id: my-order-service
+#              uri: lb://order-service
+#              predicates:
+#                - Path=/**
+#              filters:
+#                - RewritePath=/my-orders/?(?<segment>.*), /$\{segment}
+#                #- SaveSession
             - id: json-placeholder
               uri: https://jsonplaceholder.typicode.com
               predicates:
                 - Path=/jph/**
               filters:
                 - RewritePath=/jph/?(?<segment>.*), /$\{segment}
+  #            - id: nextjs
+#              uri: http://localhost:3000
+#              predicates:
+#                - Path=/**
   security:
     oauth2:
       resourceserver:
@@ -53,15 +58,29 @@ spring:
           front-bff-client:
             provider: iam-service
             client-id: front-bff-client
-            client-secret: front-bff-secret
-            client-authentication-method: client_secret_basic
+            client-authentication-method: none
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:9999/login/oauth2/code/front-bff-client"
+            redirect-uri: "{baseUrl}/login/oauth2/code/front-bff-client"
             scope:
               - openid
               - profile
-
-
+springdoc:
+  scalar:
+    enabled: true
+    urls:
+      - name: Order Service
+        url: /order-service/v3/api-docs
+      - name: Business Service
+        url: /business-service/v3/api-docs
+  swagger-ui:
+    enabled: true
+    urls:
+      - name: Order Service
+        url: /order-service/v3/api-docs
+      - name: Business Service
+        url: /business-service/v3/api-docs
+  api-docs:
+    enabled: true
 
 management:
   endpoints:
@@ -71,8 +90,3 @@ management:
   endpoint:
     gateway:
       access: read_only
-
-logging:
-  level:
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2.client: TRACE

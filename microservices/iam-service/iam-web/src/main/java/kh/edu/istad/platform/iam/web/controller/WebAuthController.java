@@ -2,6 +2,8 @@ package kh.edu.istad.platform.iam.web.controller;
 
 import kh.edu.istad.platform.iam.domain.dto.RegisterUserCommand;
 import kh.edu.istad.platform.iam.domain.usecase.RegisterUserUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.SendTwoFactorOtpUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.VerifyTwoFactorOtpUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -16,14 +18,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class WebAuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
+    private final SendTwoFactorOtpUseCase sendTwoFactorOtpUseCase;
+    private final VerifyTwoFactorOtpUseCase verifyTwoFactorOtpUseCase;
 
     @GetMapping("/login")
     public String login(
             @RequestParam(name = "error", required = false) String error,
             @RequestParam(name = "logout", required = false) String logout,
             @RequestParam(name = "registered", required = false) String registered,
+            java.util.Locale locale,
             Model model
     ) {
+        model.addAttribute("currentLang", locale != null ? locale.getLanguage() : "en");
         if (error != null) {
             model.addAttribute("error", true);
         }
@@ -36,8 +42,91 @@ public class WebAuthController {
         return "login";
     }
 
+    @GetMapping("/login/2fa")
+    public String twoFactorPage(
+            @RequestParam(name = "username", required = false) String username,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "target", required = false) String target,
+            @RequestParam(name = "error", required = false) String error,
+            @RequestParam(name = "resent", required = false) String resent,
+            java.util.Locale locale,
+            Model model
+    ) {
+        model.addAttribute("currentLang", locale != null ? locale.getLanguage() : "en");
+        String effectiveUsername = (username != null && !username.isBlank()) ? username : "admin";
+        model.addAttribute("username", effectiveUsername);
+
+        String effectiveEmail = (email != null && !email.isBlank()) ? email : (effectiveUsername + "@istad.edu.kh");
+        model.addAttribute("email", effectiveEmail);
+
+        if (target != null && !target.isBlank() && !target.contains("/login")) {
+            model.addAttribute("target", target);
+        } else {
+            model.addAttribute("target", "/account");
+        }
+
+        if (error != null) {
+            model.addAttribute("error", true);
+        }
+        if (resent != null) {
+            model.addAttribute("resent", true);
+        }
+
+        // Trigger dispatching 2FA OTP code to the user's email address via SMTP
+        try {
+            sendTwoFactorOtpUseCase.execute(effectiveUsername, effectiveEmail, false);
+        } catch (Exception ex) {
+            log.error("Failed to dispatch 2FA OTP for {}: {}", effectiveUsername, ex.getMessage());
+        }
+
+        return "login-2fa";
+    }
+
+    @PostMapping("/login/2fa/resend")
+    public String resendTwoFactor(
+            @RequestParam(name = "username", required = false) String username,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "target", required = false) String target
+    ) {
+        String effectiveUsername = (username != null && !username.isBlank()) ? username : "admin";
+        String effectiveEmail = (email != null && !email.isBlank()) ? email : (effectiveUsername + "@istad.edu.kh");
+        try {
+            sendTwoFactorOtpUseCase.execute(effectiveUsername, effectiveEmail, true);
+        } catch (Exception ex) {
+            log.error("Failed to resend 2FA OTP for {}: {}", effectiveUsername, ex.getMessage());
+        }
+        String redirect = "redirect:/login/2fa?resent=true";
+        if (username != null) redirect += "&username=" + java.net.URLEncoder.encode(username, java.nio.charset.StandardCharsets.UTF_8);
+        if (email != null) redirect += "&email=" + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8);
+        if (target != null && !target.isBlank()) redirect += "&target=" + java.net.URLEncoder.encode(target, java.nio.charset.StandardCharsets.UTF_8);
+        return redirect;
+    }
+
+    @PostMapping("/login/2fa")
+    public String processTwoFactor(
+            @RequestParam(name = "code") String code,
+            @RequestParam(name = "username", required = false) String username,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "target", required = false) String target,
+            Model model
+    ) {
+        boolean valid = verifyTwoFactorOtpUseCase.execute(username, email, code);
+        if (valid) {
+            if (target != null && !target.isBlank() && !target.contains("/login")) {
+                return "redirect:" + target;
+            }
+            return "redirect:/account";
+        }
+        String redirect = "redirect:/login/2fa?error=true";
+        if (username != null) redirect += "&username=" + java.net.URLEncoder.encode(username, java.nio.charset.StandardCharsets.UTF_8);
+        if (email != null) redirect += "&email=" + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8);
+        if (target != null && !target.isBlank()) redirect += "&target=" + java.net.URLEncoder.encode(target, java.nio.charset.StandardCharsets.UTF_8);
+        return redirect;
+    }
+
     @GetMapping("/register")
-    public String registerPage(Model model) {
+    public String registerPage(java.util.Locale locale, Model model) {
+        model.addAttribute("currentLang", locale != null ? locale.getLanguage() : "en");
         return "register";
     }
 

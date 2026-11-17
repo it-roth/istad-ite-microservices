@@ -28,8 +28,8 @@ public interface RoleJpaRepository extends JpaRepository<RoleJpaEntity, Long> {
 
     @Query("""
         SELECT r FROM RoleJpaEntity r 
-        WHERE (:name IS NULL OR :name = '' OR LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%')))
-          AND (:isActive IS NULL OR r.isActive = :isActive)
+        WHERE (cast(:name as string) IS NULL OR :name = '' OR LOWER(r.name) LIKE LOWER(CONCAT('%', cast(:name as string), '%')))
+          AND (cast(:isActive as boolean) IS NULL OR r.isActive = :isActive)
           AND r.isDeleted = false
     """)
     Page<RoleJpaEntity> findAllRoles(

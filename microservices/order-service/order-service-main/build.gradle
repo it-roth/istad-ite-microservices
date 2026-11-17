@@ -4,6 +4,10 @@ plugins {
 
 dependencies {
 
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-api:3.2.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+
     implementation 'org.liquibase:liquibase-core'
     implementation 'org.springframework.boot:spring-boot-starter-liquibase'
     runtimeOnly 'org.postgresql:postgresql'

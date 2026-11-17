@@ -18,3 +18,7 @@ repositories {
 tasks.named('test', Test) {
     useJUnitPlatform()
 }
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add('-parameters')
+}

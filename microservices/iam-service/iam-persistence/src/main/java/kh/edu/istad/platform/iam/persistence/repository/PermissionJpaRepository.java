@@ -28,8 +28,8 @@ public interface PermissionJpaRepository extends JpaRepository<PermissionJpaEnti
 
     @Query("""
         SELECT p FROM PermissionJpaEntity p 
-        WHERE (:resource IS NULL OR :resource = '' OR LOWER(p.resource) = LOWER(:resource))
-          AND (:action IS NULL OR :action = '' OR LOWER(p.action) = LOWER(:action))
+        WHERE (cast(:resource as string) IS NULL OR :resource = '' OR LOWER(p.resource) = LOWER(cast(:resource as string)))
+          AND (cast(:action as string) IS NULL OR :action = '' OR LOWER(p.action) = LOWER(cast(:action as string)))
           AND p.isDeleted = false
     """)
     Page<PermissionJpaEntity> findAllPermissions(

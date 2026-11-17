@@ -1,6 +1,13 @@
 server:
   port: 9092
+  forward-headers-strategy: framework
+
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:39000
   application:
     name: order-service
   profiles:
@@ -41,4 +48,3 @@ spring:
 #        read-timeout:
 #          seconds: 10
 #        base-url: http://customer-service
-

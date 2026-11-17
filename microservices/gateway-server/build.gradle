@@ -4,6 +4,10 @@ plugins {
 
 dependencies {
 
+    //Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:3.2.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-scalar:3.2.0'
+
     //Oauth2
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'

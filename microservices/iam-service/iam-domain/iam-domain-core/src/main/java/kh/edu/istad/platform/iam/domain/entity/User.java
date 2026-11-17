@@ -33,6 +33,7 @@ public class User extends AggregateRoot<UserId> {
     private String addressCountry;
 
     private Boolean enabled;
+    private Boolean twoFactorEnabled;
     private Boolean accountNonExpired;
     private Boolean accountNonLocked;
     private Boolean credentialsNonExpired;
@@ -75,6 +76,7 @@ public class User extends AggregateRoot<UserId> {
         this.addressPostalCode = builder.addressPostalCode;
         this.addressCountry = builder.addressCountry;
         this.enabled = builder.enabled;
+        this.twoFactorEnabled = builder.twoFactorEnabled != null ? builder.twoFactorEnabled : false;
         this.accountNonExpired = builder.accountNonExpired;
         this.accountNonLocked = builder.accountNonLocked;
         this.credentialsNonExpired = builder.credentialsNonExpired;
@@ -194,6 +196,14 @@ public class User extends AggregateRoot<UserId> {
 
     public Boolean getEnabled() {
         return enabled;
+    }
+
+    public Boolean getTwoFactorEnabled() {
+        return twoFactorEnabled != null ? twoFactorEnabled : false;
+    }
+
+    public void setTwoFactorEnabled(Boolean twoFactorEnabled) {
+        this.twoFactorEnabled = twoFactorEnabled;
     }
 
     public Boolean getAccountNonExpired() {
@@ -433,6 +443,7 @@ public class User extends AggregateRoot<UserId> {
         private String addressPostalCode;
         private String addressCountry;
         private Boolean enabled;
+        private Boolean twoFactorEnabled = false;
         private Boolean accountNonExpired;
         private Boolean accountNonLocked;
         private Boolean credentialsNonExpired;
@@ -549,6 +560,10 @@ public class User extends AggregateRoot<UserId> {
         }
         public Builder enabled(Boolean val) {
             enabled = val;
+            return this;
+        }
+        public Builder twoFactorEnabled(Boolean val) {
+            twoFactorEnabled = val;
             return this;
         }
         public Builder accountNonExpired(Boolean val) {

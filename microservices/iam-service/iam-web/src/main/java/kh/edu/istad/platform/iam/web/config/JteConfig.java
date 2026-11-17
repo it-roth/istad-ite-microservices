@@ -66,15 +66,38 @@ public class JteConfig {
             }
 
             String template = viewName.endsWith(".jte") ? viewName : viewName + ".jte";
+            Path devPath = Paths.get("microservices/iam-service/iam-web/src/main/jte", template);
+            Path localPath = Paths.get("src/main/jte", template);
+            boolean existsOnDisk = Files.exists(devPath) || Files.exists(localPath);
+            boolean existsInCp = getClass().getClassLoader().getResource("jte/" + template) != null;
+            if (!existsOnDisk && !existsInCp) {
+                return null;
+            }
+
             return (Map<String, ?> model, jakarta.servlet.http.HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) -> {
+                try {
+                    // Pre-create session before committing response
+                    request.getSession(true);
+                } catch (Exception ignored) {
+                }
+
+                Map<String, Object> parameters = new LinkedHashMap<>();
+                parameters.putAll(model);
+
+                CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+                if (csrfToken == null) {
+                    csrfToken = (CsrfToken) request.getAttribute("_csrf");
+                }
+                if (csrfToken != null) {
+                    try {
+                        csrfToken.getToken(); // Eagerly evaluate deferred token before streaming
+                    } catch (Exception ignored) {
+                    }
+                    parameters.putIfAbsent("csrfToken", csrfToken);
+                }
+
                 response.setContentType("text/html;charset=UTF-8");
                 try (PrintWriter writer = response.getWriter()) {
-                    Map<String, Object> parameters = new LinkedHashMap<>();
-                    parameters.putAll(model);
-                    CsrfToken csrfToken = (CsrfToken) request.getAttribute("_csrf");
-                    if (csrfToken != null) {
-                        parameters.putIfAbsent("csrfToken", csrfToken);
-                    }
                     templateEngine.render(template, parameters, new WriterOutput(writer));
                 }
             };

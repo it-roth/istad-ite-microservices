@@ -1,7 +1,10 @@
 package kh.edu.istad.platform.iam.infrastructure.adapter;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import kh.edu.istad.platform.iam.domain.dto.AuthUserResult;
 import kh.edu.istad.platform.iam.domain.dto.FederatedIdentityCommand;
+import kh.edu.istad.platform.iam.domain.port.out.AccountSecurityRepository;
 import kh.edu.istad.platform.iam.domain.usecase.FindOrProvisionFederatedUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.LinkFederatedIdentityUseCase;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Slf4j
 @Service
@@ -23,6 +28,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final FindOrProvisionFederatedUserUseCase findOrProvisionFederatedUserUseCase;
     private final LinkFederatedIdentityUseCase linkFederatedIdentityUseCase;
     private final SocialProfileExtractor socialProfileExtractor;
+    private final AccountSecurityRepository accountSecurityRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -46,12 +52,45 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private AuthUserResult resolveUser(FederatedIdentityCommand command) {
-        Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
-        if (currentAuthentication != null
-                && currentAuthentication.isAuthenticated()
-                && !(currentAuthentication instanceof AnonymousAuthenticationToken)) {
-            return linkFederatedIdentityUseCase.execute(currentAuthentication.getName(), command);
+        String linkingUser = null;
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes reqAttr) {
+            HttpServletRequest request = reqAttr.getRequest();
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                linkingUser = (String) session.getAttribute("iam.link-user");
+                session.removeAttribute("iam.link-user");
+                session.setAttribute("iam.link-success", command.provider());
+            }
         }
-        return findOrProvisionFederatedUserUseCase.execute(command);
+        try {
+            if (linkingUser != null && !linkingUser.isBlank()) {
+                AuthUserResult linked = linkFederatedIdentityUseCase.execute(linkingUser, command);
+                try {
+                    accountSecurityRepository.recordActivity(linked.uuid(), "IDENTITY_LINKED",
+                            "Connected " + command.provider() + " single sign-on authentication",
+                            linkingUser, "127.0.0.1");
+                } catch (Exception ignored) {}
+                return linked;
+            }
+
+            Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
+            if (currentAuthentication != null
+                    && currentAuthentication.isAuthenticated()
+                    && !(currentAuthentication instanceof AnonymousAuthenticationToken)) {
+                AuthUserResult linked = linkFederatedIdentityUseCase.execute(currentAuthentication.getName(), command);
+                try {
+                    accountSecurityRepository.recordActivity(linked.uuid(), "IDENTITY_LINKED",
+                            "Connected " + command.provider() + " single sign-on authentication",
+                            currentAuthentication.getName(), "127.0.0.1");
+                } catch (Exception ignored) {}
+                return linked;
+            }
+            return findOrProvisionFederatedUserUseCase.execute(command);
+        } catch (kh.edu.istad.platform.iam.domain.exception.IamDomainException ex) {
+            log.warn("OAuth2 link error: {}", ex.getMessage());
+            throw new OAuth2AuthenticationException(new org.springframework.security.oauth2.core.OAuth2Error(
+                    "link_failed", ex.getMessage(), null
+            ), ex);
+        }
     }
 }

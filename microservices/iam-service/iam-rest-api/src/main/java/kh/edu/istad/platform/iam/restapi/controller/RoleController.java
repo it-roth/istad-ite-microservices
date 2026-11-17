@@ -14,6 +14,7 @@ import kh.edu.istad.platform.iam.domain.usecase.AssignPermissionsToRoleUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.CreateRoleUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.DeactivateRoleUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.DeleteRoleUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.GetRolePermissionsUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.GetRoleUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.ListRolesUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.RevokePermissionFromRoleUseCase;
@@ -21,6 +22,7 @@ import kh.edu.istad.platform.iam.domain.usecase.UpdateRoleUseCase;
 import kh.edu.istad.platform.iam.restapi.dto.AssignPermissionsToRoleRequest;
 import kh.edu.istad.platform.iam.restapi.dto.CreateRoleRequest;
 import kh.edu.istad.platform.iam.restapi.dto.PageResponse;
+import kh.edu.istad.platform.iam.restapi.dto.PermissionResponse;
 import kh.edu.istad.platform.iam.restapi.dto.RoleResponse;
 import kh.edu.istad.platform.iam.restapi.dto.UpdateRoleRequest;
 import kh.edu.istad.platform.iam.restapi.mapper.IamWebMapper;
@@ -49,6 +51,7 @@ public class RoleController {
     private final CreateRoleUseCase createRoleUseCase;
     private final ListRolesUseCase listRolesUseCase;
     private final GetRoleUseCase getRoleUseCase;
+    private final GetRolePermissionsUseCase getRolePermissionsUseCase;
     private final UpdateRoleUseCase updateRoleUseCase;
     private final DeleteRoleUseCase deleteRoleUseCase;
     private final ActivateRoleUseCase activateRoleUseCase;
@@ -58,7 +61,7 @@ public class RoleController {
     private final IamWebMapper iamWebMapper;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('role:create')")
+    @PreAuthorize("hasAnyAuthority('role:create', 'iam:role:create', 'ROLE_ADMIN')")
     public ResponseEntity<RoleResponse> createRole(
             @Valid @RequestBody CreateRoleRequest request
     ) {
@@ -68,13 +71,13 @@ public class RoleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('role:read')")
+    @PreAuthorize("hasAnyAuthority('role:read', 'iam:role:read', 'ROLE_ADMIN')")
     public ResponseEntity<PageResponse<RoleResponse>> listRoles(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) String sort
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "query", required = false) String query,
+            @RequestParam(name = "active", required = false) Boolean active,
+            @RequestParam(name = "sort", required = false) String sort
     ) {
         RoleFilterQuery filterQuery = new RoleFilterQuery(query, active, page, size, sort);
         PageResult<RoleSummary> result = listRolesUseCase.execute(filterQuery);
@@ -83,18 +86,30 @@ public class RoleController {
     }
 
     @GetMapping("/{uuid}")
-    @PreAuthorize("hasAuthority('role:read')")
+    @PreAuthorize("hasAnyAuthority('role:read', 'iam:role:read', 'ROLE_ADMIN')")
     public ResponseEntity<RoleResponse> getRole(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         RoleResult result = getRoleUseCase.execute(uuid);
         return ResponseEntity.ok(iamWebMapper.toResponse(result));
     }
 
+    @GetMapping("/{uuid}/permissions")
+    @PreAuthorize("hasAnyAuthority('role:read', 'iam:role:read', 'ROLE_ADMIN')")
+    public ResponseEntity<List<PermissionResponse>> getRolePermissions(
+            @PathVariable("uuid") UUID uuid
+    ) {
+        var results = getRolePermissionsUseCase.execute(uuid);
+        List<PermissionResponse> response = results.stream()
+                .map(iamWebMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     @PatchMapping("/{uuid}")
-    @PreAuthorize("hasAuthority('role:update')")
+    @PreAuthorize("hasAnyAuthority('role:update', 'iam:role:update', 'ROLE_ADMIN')")
     public ResponseEntity<RoleResponse> updateRole(
-            @PathVariable UUID uuid,
+            @PathVariable("uuid") UUID uuid,
             @Valid @RequestBody UpdateRoleRequest request
     ) {
         UpdateRoleCommand command = iamWebMapper.toCommand(uuid, request);
@@ -103,36 +118,36 @@ public class RoleController {
     }
 
     @DeleteMapping("/{uuid}")
-    @PreAuthorize("hasAuthority('role:delete')")
+    @PreAuthorize("hasAnyAuthority('role:delete', 'iam:role:delete', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deleteRole(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         deleteRoleUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/activate")
-    @PreAuthorize("hasAuthority('role:update')")
+    @PreAuthorize("hasAnyAuthority('role:update', 'iam:role:update', 'ROLE_ADMIN')")
     public ResponseEntity<Void> activateRole(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         activateRoleUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/deactivate")
-    @PreAuthorize("hasAuthority('role:update')")
+    @PreAuthorize("hasAnyAuthority('role:update', 'iam:role:update', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deactivateRole(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         deactivateRoleUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/permissions")
-    @PreAuthorize("hasAuthority('role:assign')")
+    @PreAuthorize("hasAnyAuthority('role:assign', 'iam:role:assign', 'ROLE_ADMIN')")
     public ResponseEntity<List<PermissionAssignmentResult>> assignPermissions(
-            @PathVariable UUID uuid,
+            @PathVariable("uuid") UUID uuid,
             @Valid @RequestBody AssignPermissionsToRoleRequest request
     ) {
         AssignPermissionsToRoleCommand command = iamWebMapper.toCommand(uuid, request);
@@ -141,11 +156,11 @@ public class RoleController {
     }
 
     @DeleteMapping("/{uuid}/permissions/{permissionUuid}")
-    @PreAuthorize("hasAuthority('role:assign')")
+    @PreAuthorize("hasAnyAuthority('role:assign', 'iam:role:assign', 'ROLE_ADMIN')")
     public ResponseEntity<Void> revokePermission(
-            @PathVariable UUID uuid,
-            @PathVariable UUID permissionUuid,
-            @RequestParam(required = false, defaultValue = "Revoked by admin") String reason
+            @PathVariable("uuid") UUID uuid,
+            @PathVariable("permissionUuid") UUID permissionUuid,
+            @RequestParam(name = "reason", required = false, defaultValue = "Revoked by admin") String reason
     ) {
         revokePermissionFromRoleUseCase.execute(uuid, permissionUuid, reason);
         return ResponseEntity.noContent().build();

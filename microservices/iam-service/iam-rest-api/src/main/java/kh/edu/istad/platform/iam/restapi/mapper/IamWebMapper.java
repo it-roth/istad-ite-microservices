@@ -51,159 +51,166 @@ import java.util.function.Function;
 @Mapper(componentModel = "spring")
 public interface IamWebMapper {
 
-    @Mapping(target = "rawPassword", source = "password")
-    RegisterUserCommand toCommand(RegisterUserRequest request);
+        @Mapping(target = "rawPassword", source = "password")
+        RegisterUserCommand toCommand(RegisterUserRequest request);
 
-    @Mapping(target = "rawPassword", source = "request.password")
-    @Mapping(target = "streetAddress", source = "request.address.streetAddress")
-    @Mapping(target = "locality", source = "request.address.locality")
-    @Mapping(target = "region", source = "request.address.region")
-    @Mapping(target = "postalCode", source = "request.address.postalCode")
-    @Mapping(target = "country", source = "request.address.country")
-    CreateUserCommand toCommand(CreateUserRequest request);
+        @Mapping(target = "rawPassword", source = "request.password")
+        @Mapping(target = "streetAddress", source = "request.address.streetAddress")
+        @Mapping(target = "locality", source = "request.address.locality")
+        @Mapping(target = "region", source = "request.address.region")
+        @Mapping(target = "postalCode", source = "request.address.postalCode")
+        @Mapping(target = "country", source = "request.address.country")
+        CreateUserCommand toCommand(CreateUserRequest request);
 
-    @Mapping(target = "streetAddress", source = "request.address.streetAddress")
-    @Mapping(target = "locality", source = "request.address.locality")
-    @Mapping(target = "region", source = "request.address.region")
-    @Mapping(target = "postalCode", source = "request.address.postalCode")
-    @Mapping(target = "country", source = "request.address.country")
-    UpdateUserProfileCommand toCommand(UUID userUuid, UpdateUserProfileRequest request);
+        @Mapping(target = "streetAddress", source = "request.address.streetAddress")
+        @Mapping(target = "locality", source = "request.address.locality")
+        @Mapping(target = "region", source = "request.address.region")
+        @Mapping(target = "postalCode", source = "request.address.postalCode")
+        @Mapping(target = "country", source = "request.address.country")
+        UpdateUserProfileCommand toCommand(UUID userUuid, UpdateUserProfileRequest request);
 
-    default ChangePasswordCommand toCommand(UUID userUuid, ChangePasswordRequest request) {
-        return new ChangePasswordCommand(
-                userUuid,
-                request.currentPassword(),
-                request.newPassword()
-        );
-    }
-
-    default AssignRolesToUserCommand toCommand(UUID userUuid, AssignRolesToUserRequest request) {
-        return new AssignRolesToUserCommand(
-                userUuid,
-                request.roleUuids(),
-                request.expiresAt(),
-                request.reason()
-        );
-    }
-
-    default GrantPermissionsToUserCommand toCommand(UUID userUuid, GrantPermissionsToUserRequest request) {
-        return new GrantPermissionsToUserCommand(
-                userUuid,
-                request.permissionUuids(),
-                request.effect(),
-                null,
-                request.reason()
-        );
-    }
-
-    CreateRoleCommand toCommand(CreateRoleRequest request);
-
-    default UpdateRoleCommand toCommand(UUID roleUuid, UpdateRoleRequest request) {
-        return new UpdateRoleCommand(
-                roleUuid,
-                request.description()
-        );
-    }
-
-    default AssignPermissionsToRoleCommand toCommand(UUID roleUuid, AssignPermissionsToRoleRequest request) {
-        return new AssignPermissionsToRoleCommand(
-                roleUuid,
-                request.permissionUuids(),
-                request.expiresAt(),
-                request.reason()
-        );
-    }
-
-    CreatePermissionCommand toCommand(CreatePermissionRequest request);
-
-    default UpdatePermissionCommand toCommand(UUID permissionUuid, UpdatePermissionRequest request) {
-        return new UpdatePermissionCommand(
-                permissionUuid,
-                request.description()
-        );
-    }
-
-    default UserResponse toResponse(UserResult user, List<UserRoleSummaryResponse> roles) {
-        String fullName = ((user.givenName() != null ? user.givenName() : "") + " "
-                + (user.familyName() != null ? user.familyName() : "")).trim();
-
-        return new UserResponse(
-                user.uuid(),
-                user.username(),
-                user.email(),
-                user.emailVerified(),
-                fullName,
-                user.locale(),
-                user.enabled(),
-                roles != null ? roles : List.of(),
-                user.createdAt(),
-                user.updatedAt()
-        );
-    }
-
-    default UserAuthoritiesResponse toResponse(UserAuthoritiesResult result) {
-        List<RoleWithExpiryResponse> roles = new ArrayList<>();
-        if (result.roles() != null) {
-            for (UserAuthoritiesResult.RoleAuthorityItem r : result.roles()) {
-                roles.add(new RoleWithExpiryResponse(
-                        r.uuid(),
-                        r.name(),
-                        r.expiresAt()
-                ));
-            }
+        default ChangePasswordCommand toCommand(UUID userUuid, ChangePasswordRequest request) {
+                return new ChangePasswordCommand(
+                                userUuid,
+                                request.currentPassword(),
+                                request.newPassword());
         }
 
-        List<DirectPermissionResponse> directPermissions = new ArrayList<>();
-        if (result.directPermissions() != null) {
-            for (UserAuthoritiesResult.DirectPermissionItem d : result.directPermissions()) {
-                directPermissions.add(new DirectPermissionResponse(
-                        d.name(),
-                        d.effect()
-                ));
-            }
+        default AssignRolesToUserCommand toCommand(UUID userUuid, AssignRolesToUserRequest request) {
+                return new AssignRolesToUserCommand(
+                                userUuid,
+                                request.roleUuids(),
+                                request.expiresAt(),
+                                request.reason());
         }
 
-        List<String> effective = result.effectivePermissions() != null
-                ? new ArrayList<>(result.effectivePermissions())
-                : List.of();
+        default GrantPermissionsToUserCommand toCommand(UUID userUuid, GrantPermissionsToUserRequest request) {
+                return new GrantPermissionsToUserCommand(
+                                userUuid,
+                                request.permissionUuids(),
+                                request.effect(),
+                                null,
+                                request.reason());
+        }
 
-        return new UserAuthoritiesResponse(
-                roles,
-                directPermissions,
-                effective
-        );
-    }
+        CreateRoleCommand toCommand(CreateRoleRequest request);
 
-    IdentityResponse toResponse(IdentityResult result);
+        default UpdateRoleCommand toCommand(UUID roleUuid, UpdateRoleRequest request) {
+                return new UpdateRoleCommand(
+                                roleUuid,
+                                request.description());
+        }
 
-    @Mapping(target = "active", source = "isActive")
-    @Mapping(target = "system", source = "isSystem")
-    RoleResponse toResponse(RoleResult result);
+        default AssignPermissionsToRoleCommand toCommand(UUID roleUuid, AssignPermissionsToRoleRequest request) {
+                return new AssignPermissionsToRoleCommand(
+                                roleUuid,
+                                request.permissionUuids(),
+                                request.expiresAt(),
+                                request.reason());
+        }
 
-    @Mapping(target = "description", ignore = true)
-    @Mapping(target = "active", source = "isActive")
-    @Mapping(target = "system", source = "isSystem")
-    RoleResponse toResponse(RoleSummary summary);
+        CreatePermissionCommand toCommand(CreatePermissionRequest request);
 
-    @Mapping(target = "active", source = "isActive")
-    @Mapping(target = "system", source = "isSystem")
-    PermissionResponse toResponse(PermissionResult result);
+        default UpdatePermissionCommand toCommand(UUID permissionUuid, UpdatePermissionRequest request) {
+                return new UpdatePermissionCommand(
+                                permissionUuid,
+                                request.description());
+        }
 
-    default <T, R> PageResponse<R> toPageResponse(PageResult<T> pageResult, Function<T, R> mapper) {
-        List<R> content = pageResult.content().stream()
-                .map(mapper)
-                .toList();
+        default UserResponse toResponse(UserResult user, List<UserRoleSummaryResponse> roles) {
+                String fullName = ((user.givenName() != null ? user.givenName() : "") + " "
+                                + (user.familyName() != null ? user.familyName() : "")).trim();
 
-        PageMetadata metadata = new PageMetadata(
-                pageResult.pageNumber(),
-                pageResult.pageSize(),
-                pageResult.totalElements(),
-                pageResult.totalPages()
-        );
+                AddressDto address = new AddressDto(
+                                user.streetAddress(),
+                                user.locality(),
+                                user.region(),
+                                user.postalCode(),
+                                user.country());
 
-        return new PageResponse<>(
-                content,
-                metadata
-        );
-    }
+                return new UserResponse(
+                                user.uuid(),
+                                user.username(),
+                                user.email(),
+                                user.emailVerified(),
+                                fullName,
+                                user.givenName(),
+                                user.familyName(),
+                                user.middleName(),
+                                user.nickname(),
+                                user.gender(),
+                                user.birthdate(),
+                                user.phoneNumber(),
+                                user.pictureUrl(),
+                                user.websiteUrl(),
+                                user.locale(),
+                                user.enabled(),
+                                roles != null ? roles : List.of(),
+                                user.lastLoginAt(),
+                                user.createdAt(),
+                                user.updatedAt(),
+                                address,
+                                user.twoFactorEnabled());
+        }
+
+        default UserAuthoritiesResponse toResponse(UserAuthoritiesResult result) {
+                List<RoleWithExpiryResponse> roles = new ArrayList<>();
+                if (result.roles() != null) {
+                        for (UserAuthoritiesResult.RoleAuthorityItem r : result.roles()) {
+                                roles.add(new RoleWithExpiryResponse(
+                                                r.uuid(),
+                                                r.name(),
+                                                r.expiresAt()));
+                        }
+                }
+
+                List<DirectPermissionResponse> directPermissions = new ArrayList<>();
+                if (result.directPermissions() != null) {
+                        for (UserAuthoritiesResult.DirectPermissionItem d : result.directPermissions()) {
+                                directPermissions.add(new DirectPermissionResponse(
+                                                d.name(),
+                                                d.effect()));
+                        }
+                }
+
+                List<String> effective = result.effectivePermissions() != null
+                                ? new ArrayList<>(result.effectivePermissions())
+                                : List.of();
+
+                return new UserAuthoritiesResponse(
+                                roles,
+                                directPermissions,
+                                effective);
+        }
+
+        IdentityResponse toResponse(IdentityResult result);
+
+        @Mapping(target = "active", source = "isActive")
+        @Mapping(target = "system", source = "isSystem")
+        RoleResponse toResponse(RoleResult result);
+
+        @Mapping(target = "description", ignore = true)
+        @Mapping(target = "active", source = "isActive")
+        @Mapping(target = "system", source = "isSystem")
+        RoleResponse toResponse(RoleSummary summary);
+
+        @Mapping(target = "active", source = "isActive")
+        @Mapping(target = "system", source = "isSystem")
+        PermissionResponse toResponse(PermissionResult result);
+
+        default <T, R> PageResponse<R> toPageResponse(PageResult<T> pageResult, Function<T, R> mapper) {
+                List<R> content = pageResult.content().stream()
+                                .map(mapper)
+                                .toList();
+
+                PageMetadata metadata = new PageMetadata(
+                                pageResult.pageNumber(),
+                                pageResult.pageSize(),
+                                pageResult.totalElements(),
+                                pageResult.totalPages());
+
+                return new PageResponse<>(
+                                content,
+                                metadata);
+        }
 }

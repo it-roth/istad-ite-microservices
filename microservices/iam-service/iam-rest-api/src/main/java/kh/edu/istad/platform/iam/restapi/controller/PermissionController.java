@@ -49,7 +49,7 @@ public class PermissionController {
     private final IamWebMapper iamWebMapper;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('permission:create')")
+    @PreAuthorize("hasAnyAuthority('permission:create', 'iam:permission:create', 'ROLE_ADMIN')")
     public ResponseEntity<PermissionResponse> createPermission(
             @Valid @RequestBody CreatePermissionRequest request
     ) {
@@ -59,13 +59,13 @@ public class PermissionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('permission:read')")
+    @PreAuthorize("hasAnyAuthority('permission:read', 'iam:permission:read', 'ROLE_ADMIN')")
     public ResponseEntity<PageResponse<PermissionResponse>> listPermissions(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String resource,
-            @RequestParam(required = false) String action,
-            @RequestParam(required = false) String sort
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "resource", required = false) String resource,
+            @RequestParam(name = "action", required = false) String action,
+            @RequestParam(name = "sort", required = false) String sort
     ) {
         PermissionFilterQuery filterQuery = new PermissionFilterQuery(resource, action, page, size, sort);
         PageResult<PermissionResult> result = listPermissionsUseCase.execute(filterQuery);
@@ -74,18 +74,18 @@ public class PermissionController {
     }
 
     @GetMapping("/{uuid}")
-    @PreAuthorize("hasAuthority('permission:read')")
+    @PreAuthorize("hasAnyAuthority('permission:read', 'iam:permission:read', 'ROLE_ADMIN')")
     public ResponseEntity<PermissionResponse> getPermission(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         PermissionResult result = getPermissionUseCase.execute(uuid);
         return ResponseEntity.ok(iamWebMapper.toResponse(result));
     }
 
     @PatchMapping("/{uuid}")
-    @PreAuthorize("hasAuthority('permission:update')")
+    @PreAuthorize("hasAnyAuthority('permission:update', 'iam:permission:update', 'ROLE_ADMIN')")
     public ResponseEntity<PermissionResponse> updatePermission(
-            @PathVariable UUID uuid,
+            @PathVariable("uuid") UUID uuid,
             @Valid @RequestBody UpdatePermissionRequest request
     ) {
         UpdatePermissionCommand command = iamWebMapper.toCommand(uuid, request);
@@ -94,27 +94,27 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{uuid}")
-    @PreAuthorize("hasAuthority('permission:delete')")
+    @PreAuthorize("hasAnyAuthority('permission:delete', 'iam:permission:delete', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deletePermission(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         deletePermissionUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/activate")
-    @PreAuthorize("hasAuthority('permission:update')")
+    @PreAuthorize("hasAnyAuthority('permission:update', 'iam:permission:update', 'ROLE_ADMIN')")
     public ResponseEntity<Void> activatePermission(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         activatePermissionUseCase.execute(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{uuid}/deactivate")
-    @PreAuthorize("hasAuthority('permission:update')")
+    @PreAuthorize("hasAnyAuthority('permission:update', 'iam:permission:update', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deactivatePermission(
-            @PathVariable UUID uuid
+            @PathVariable("uuid") UUID uuid
     ) {
         deactivatePermissionUseCase.execute(uuid);
         return ResponseEntity.noContent().build();

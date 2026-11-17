@@ -7,6 +7,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import kh.edu.istad.platform.iam.infrastructure.adapter.CustomOAuth2UserService;
 import kh.edu.istad.platform.iam.infrastructure.adapter.CustomOidcUserService;
+import kh.edu.istad.platform.iam.infrastructure.adapter.IamUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -31,6 +33,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 import java.security.KeyPair;
@@ -41,6 +45,7 @@ import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -50,10 +55,21 @@ public class SecurityConfig {
     private final JdbcTemplate jdbcTemplate;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomOidcUserService customOidcUserService;
+    private final IamUserDetailsService iamUserDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RememberMeServices rememberMeServices() {
+        TokenBasedRememberMeServices rememberMeServices = new TokenBasedRememberMeServices(
+                "istad-iam-remember-me-key-2026", iamUserDetailsService);
+        rememberMeServices.setParameter("remember-me");
+        rememberMeServices.setTokenValiditySeconds(86400 * 30); // 30 days persistent cookie
+        rememberMeServices.setAlwaysRemember(true); // Persist login so restarts keep user logged in
+        return rememberMeServices;
     }
 
     @Bean
@@ -64,22 +80,17 @@ public class SecurityConfig {
 
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                .with(authorizationServerConfigurer, (authorizationServer) ->
-                        authorizationServer
-                                .oidc(Customizer.withDefaults())	// Enable OpenID Connect 1.0
+                .with(authorizationServerConfigurer, (authorizationServer) -> authorizationServer
+                        .oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
                 )
-                .authorizeHttpRequests((authorize) ->
-                        authorize
-                                .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests((authorize) -> authorize
+                        .anyRequest().authenticated())
                 // Redirect to the login page when not authenticated from the
                 // authorization endpoint
                 .exceptionHandling((exceptions) -> exceptions
                         .defaultAuthenticationEntryPointFor(
                                 new LoginUrlAuthenticationEntryPoint("/login"),
-                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-                        )
-                );
+                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
 
         return http.build();
     }
@@ -89,21 +100,27 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(
                                 "/login",
+                                "/login/2fa",
+                                "/login/2fa/**",
                                 "/login.html",
                                 "/register",
                                 "/login/telegram",
                                 "/login/telegram/callback",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
+                                "/",
+                                "/assets/**",
+                                "/favicon.svg",
+                                "/icons.svg",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                                "/images/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
                 // Form login handles the redirect to the login page from the
                 // authorization server filter chain
                 .oauth2Login(
@@ -111,19 +128,128 @@ public class SecurityConfig {
                                 .loginPage("/login")
                                 .userInfoEndpoint(userInfo -> userInfo
                                         .userService(customOAuth2UserService)
-                                        .oidcUserService(customOidcUserService)
-                                )
-                                .permitAll()
-                )
+                                        .oidcUserService(customOidcUserService))
+                                .successHandler((request, response, authentication) -> {
+                                    rememberMeServices().loginSuccess(request, response, authentication);
+                                    jakarta.servlet.http.HttpSession session = request.getSession(false);
+                                    if (session != null && session.getAttribute("iam.link-success") != null) {
+                                        String linkedProv = (String) session.getAttribute("iam.link-success");
+                                        session.removeAttribute("iam.link-success");
+                                        response.sendRedirect(
+                                                "/account/linked-accounts?linked=" + linkedProv.toLowerCase());
+                                        return;
+                                    }
+                                    response.sendRedirect("/account");
+                                })
+                                .failureHandler((request, response, exception) -> {
+                                    jakarta.servlet.http.HttpSession session = request.getSession(false);
+                                    if (session != null && session.getAttribute("iam.link-user") != null) {
+                                        session.removeAttribute("iam.link-user");
+                                        response.sendRedirect("/account/linked-accounts?error=link_failed");
+                                        return;
+                                    }
+                                    response.sendRedirect("/login?error");
+                                })
+                                .permitAll())
                 .oauth2Client(Customizer.withDefaults())
+                .rememberMe(remember -> remember
+                        .rememberMeServices(rememberMeServices()))
                 .formLogin(config -> config
                         .loginPage("/login")
-                        .permitAll()
-                );
+                        .successHandler((request, response, authentication) -> {
+                            rememberMeServices().loginSuccess(request, response, authentication);
+                            String username = authentication.getName();
+                            boolean twoFactorRequired = false;
+                            String email = null;
+                            try {
+                                jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE");
+                                java.util.List<java.util.Map<String, Object>> rows = jdbcTemplate.queryForList(
+                                        "SELECT id, uuid, email, email_verified, two_factor_enabled FROM users WHERE username = ? OR email = ? LIMIT 1",
+                                        username, username);
+                                if (!rows.isEmpty()) {
+                                    java.util.Map<String, Object> row = rows.get(0);
+                                    email = (String) row.get("email");
+                                    Boolean twoFactorEnabled = (Boolean) row.get("two_factor_enabled");
+
+                                    boolean systemMfaRequired = false;
+                                    try {
+                                        java.util.List<java.util.Map<String, Object>> secRows = jdbcTemplate.queryForList(
+                                                "SELECT mfa_required FROM iam_security_configuration WHERE id = 1");
+                                        if (!secRows.isEmpty()) {
+                                            systemMfaRequired = Boolean.TRUE.equals(secRows.get(0).get("mfa_required"));
+                                        }
+                                    } catch (Exception ignored) {}
+
+                                    twoFactorRequired = Boolean.TRUE.equals(twoFactorEnabled) || systemMfaRequired;
+
+                                    UUID userUuid = (UUID) row.get("uuid");
+                                    String clientIp = request.getHeader("X-Forwarded-For");
+                                    if (clientIp == null || clientIp.isBlank()) {
+                                        clientIp = request.getRemoteAddr();
+                                    }
+                                    if ("0:0:0:0:0:0:0:1".equals(clientIp) || "::1".equals(clientIp)) {
+                                        clientIp = "127.0.0.1";
+                                    }
+                                    String userAgent = request.getHeader("User-Agent");
+
+                                    // Update last_login_at in users table
+                                    jdbcTemplate.update(
+                                            "UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE uuid = ?",
+                                            userUuid);
+
+                                    // Record real login attempt in iam_login_history
+                                    jdbcTemplate.update(
+                                            "INSERT INTO iam_login_history(user_uuid, principal_name, success, method, user_agent, ip_address, location) VALUES (?, ?, true, 'Password', ?, ?, 'Phnom Penh, Cambodia')",
+                                            userUuid, username, userAgent, clientIp);
+
+                                    // Register session in iam_sessions
+                                    var session = request.getSession(false);
+                                    if (session != null) {
+                                        jdbcTemplate.update(
+                                                """
+                                                        INSERT INTO iam_sessions(id, user_uuid, browser, device, user_agent, ip_address, location)
+                                                        VALUES (?, ?, 'Chrome', 'Desktop', ?, ?, 'Phnom Penh, Cambodia')
+                                                        ON CONFLICT (id) DO UPDATE SET last_activity=CURRENT_TIMESTAMP, revoked_at=NULL
+                                                        """,
+                                                session.getId(), userUuid, userAgent, clientIp);
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                twoFactorRequired = false;
+                            }
+
+                            // Retrieve requested URL before authentication redirect
+                            org.springframework.security.web.savedrequest.HttpSessionRequestCache requestCache = new org.springframework.security.web.savedrequest.HttpSessionRequestCache();
+                            org.springframework.security.web.savedrequest.SavedRequest savedRequest = requestCache
+                                    .getRequest(request, response);
+                            String targetUrl = "/account";
+                            if (savedRequest != null && savedRequest.getRedirectUrl() != null) {
+                                String savedUrl = savedRequest.getRedirectUrl();
+                                if (!savedUrl.contains("/login") && !savedUrl.contains("/assets/")) {
+                                    targetUrl = savedUrl;
+                                }
+                            }
+
+                            if (twoFactorRequired) {
+                                String redirectUrl = "/login/2fa?username="
+                                        + java.net.URLEncoder.encode(username, java.nio.charset.StandardCharsets.UTF_8);
+                                if (email != null && !email.isBlank()) {
+                                    redirectUrl += "&email=" + java.net.URLEncoder.encode(email,
+                                            java.nio.charset.StandardCharsets.UTF_8);
+                                }
+                                if (!"/account".equals(targetUrl)) {
+                                    redirectUrl += "&target=" + java.net.URLEncoder.encode(targetUrl,
+                                            java.nio.charset.StandardCharsets.UTF_8);
+                                }
+                                response.sendRedirect(redirectUrl);
+                            } else {
+                                response.sendRedirect(targetUrl);
+                            }
+                        })
+                        .permitAll());
 
         return http.build();
     }
-
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
@@ -131,12 +257,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2AuthorizationService oAuth2AuthorizationService(){
+    public OAuth2AuthorizationService oAuth2AuthorizationService() {
         return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository());
     }
 
     @Bean
-    public OAuth2AuthorizationConsentService oAuth2AuthorizationConsentService(){
+    public OAuth2AuthorizationConsentService oAuth2AuthorizationConsentService() {
         return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository());
     }
 
@@ -159,8 +285,7 @@ public class SecurityConfig {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048);
             keyPair = keyPairGenerator.generateKeyPair();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
         return keyPair;
@@ -177,6 +302,5 @@ public class SecurityConfig {
                 .issuer(issuer)
                 .build();
     }
-
 
 }

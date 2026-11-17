@@ -48,10 +48,21 @@ public class UpdateUserProfileUseCase {
             }
         }
 
+        String username = existing.getUsername();
+        if (command.username() != null && !command.username().isBlank()) {
+            String newUsername = command.username().trim();
+            if (!newUsername.equalsIgnoreCase(existing.getUsername())) {
+                if (userRepository.existsByUsername(newUsername)) {
+                    throw new IamDomainException("Username is already taken");
+                }
+                username = newUsername;
+            }
+        }
+
         User.Builder builder = User.builder()
                 .id(existing.getId())
                 .internalId(existing.getInternalId())
-                .username(existing.getUsername())
+                .username(username)
                 .email(email)
                 .emailVerified(emailVerified)
                 .passwordHash(existing.getPasswordHash())
@@ -72,24 +83,62 @@ public class UpdateUserProfileUseCase {
                 .version(existing.getVersion());
 
         // Apply profile updates
-        builder.givenName(command.givenName() != null ? command.givenName() : existing.getGivenName())
-               .familyName(command.familyName() != null ? command.familyName() : existing.getFamilyName())
-               .middleName(command.middleName() != null ? command.middleName() : existing.getMiddleName())
-               .nickname(command.nickname() != null ? command.nickname() : existing.getNickname())
-               .gender(command.gender() != null ? command.gender() : existing.getGender())
+        String cleanPhone = command.phoneNumber() != null
+                ? (command.phoneNumber().isBlank() ? null : command.phoneNumber().trim())
+                : existing.getPhoneNumber();
+        String cleanGender = command.gender() != null
+                ? (command.gender().isBlank() ? null : command.gender().trim())
+                : existing.getGender();
+        String cleanCountry = command.country() != null
+                ? (command.country().isBlank() ? null : command.country().trim().toUpperCase(Locale.ROOT))
+                : existing.getAddressCountry();
+        if (cleanCountry != null && cleanCountry.length() > 2) {
+            cleanCountry = cleanCountry.substring(0, 2);
+        }
+
+        String cleanMiddle = command.middleName() != null
+                ? (command.middleName().isBlank() ? null : command.middleName().trim())
+                : existing.getMiddleName();
+        String cleanNickname = command.nickname() != null
+                ? (command.nickname().isBlank() ? null : command.nickname().trim())
+                : existing.getNickname();
+        String cleanWebsite = command.websiteUrl() != null
+                ? (command.websiteUrl().isBlank() ? null : command.websiteUrl().trim())
+                : existing.getWebsiteUrl();
+        String cleanPicture = command.pictureUrl() != null
+                ? (command.pictureUrl().isBlank() ? null : command.pictureUrl().trim())
+                : existing.getPictureUrl();
+        String cleanStreet = command.streetAddress() != null
+                ? (command.streetAddress().isBlank() ? null : command.streetAddress().trim())
+                : existing.getAddressStreetAddress();
+        String cleanLocality = command.locality() != null
+                ? (command.locality().isBlank() ? null : command.locality().trim())
+                : existing.getAddressLocality();
+        String cleanRegion = command.region() != null
+                ? (command.region().isBlank() ? null : command.region().trim())
+                : existing.getAddressRegion();
+        String cleanPostal = command.postalCode() != null
+                ? (command.postalCode().isBlank() ? null : command.postalCode().trim())
+                : existing.getAddressPostalCode();
+
+        builder.givenName(command.givenName() != null ? command.givenName().trim() : existing.getGivenName())
+               .familyName(command.familyName() != null ? command.familyName().trim() : existing.getFamilyName())
+               .middleName(cleanMiddle)
+               .nickname(cleanNickname)
+               .gender(cleanGender)
                .birthdate(command.birthdate() != null ? command.birthdate() : existing.getBirthdate())
                .profileUrl(command.profileUrl() != null ? command.profileUrl() : existing.getProfileUrl())
-               .pictureUrl(command.pictureUrl() != null ? command.pictureUrl() : existing.getPictureUrl())
-               .websiteUrl(command.websiteUrl() != null ? command.websiteUrl() : existing.getWebsiteUrl())
+               .pictureUrl(cleanPicture)
+               .websiteUrl(cleanWebsite)
                .zoneinfo(command.zoneinfo() != null ? command.zoneinfo() : existing.getZoneinfo())
                .locale(command.locale() != null ? command.locale() : existing.getLocale())
-               .phoneNumber(command.phoneNumber() != null ? command.phoneNumber() : existing.getPhoneNumber())
+               .phoneNumber(cleanPhone)
                .phoneNumberVerified(existing.getPhoneNumberVerified())
-               .addressStreetAddress(command.streetAddress() != null ? command.streetAddress() : existing.getAddressStreetAddress())
-               .addressLocality(command.locality() != null ? command.locality() : existing.getAddressLocality())
-               .addressRegion(command.region() != null ? command.region() : existing.getAddressRegion())
-               .addressPostalCode(command.postalCode() != null ? command.postalCode() : existing.getAddressPostalCode())
-               .addressCountry(command.country() != null ? command.country() : existing.getAddressCountry());
+               .addressStreetAddress(cleanStreet)
+               .addressLocality(cleanLocality)
+               .addressRegion(cleanRegion)
+               .addressPostalCode(cleanPostal)
+               .addressCountry(cleanCountry);
 
         User updatedUser = userRepository.save(builder.build());
         return UserResultMapper.toResult(updatedUser);

@@ -66,7 +66,7 @@ public class UserJpaEntity {
     @Column(name = "profile_url", length = 500)
     private String profileUrl;
 
-    @Column(name = "picture_url", length = 500)
+    @Column(name = "picture_url", columnDefinition = "TEXT")
     private String pictureUrl;
 
     @Column(name = "website_url", length = 500)
@@ -101,6 +101,10 @@ public class UserJpaEntity {
 
     @Column(name = "enabled", nullable = false)
     private Boolean enabled;
+
+    @Builder.Default
+    @Column(name = "two_factor_enabled", nullable = false)
+    private Boolean twoFactorEnabled = false;
 
     @Column(name = "account_non_expired", nullable = false)
     private Boolean accountNonExpired;

@@ -84,6 +84,11 @@ public class LinkFederatedIdentityUseCase {
             userRepository.saveIdentity(identity);
         }
 
+        if (Boolean.TRUE.equals(command.emailVerified())) {
+            user.setEmailVerified(true);
+            userRepository.save(user);
+        }
+
         UserAuthoritiesResult authorities = getUserAuthoritiesUseCase.execute(user.getId().value());
         return new AuthUserResult(
                 user.getId().value(),

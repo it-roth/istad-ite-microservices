@@ -28,7 +28,11 @@ public class IamDomainServiceImpl implements IamDomainService {
         if (effectivePermissions != null) {
             for (String perm : effectivePermissions) {
                 if (perm != null && !perm.isBlank()) {
-                    authorities.add(perm.trim());
+                    String trimmed = perm.trim();
+                    authorities.add(trimmed);
+                    if (trimmed.startsWith("iam:")) {
+                        authorities.add(trimmed.substring(4));
+                    }
                 }
             }
         }

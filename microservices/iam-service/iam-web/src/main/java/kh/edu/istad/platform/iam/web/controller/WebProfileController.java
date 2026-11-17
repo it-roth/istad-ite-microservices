@@ -44,42 +44,20 @@ public class WebProfileController {
     private final ListConnectedOAuthClientsUseCase listConnectedOAuthClientsUseCase;
     private final RevokeOAuthClientConsentUseCase revokeOAuthClientConsentUseCase;
 
-    @GetMapping("/")
-    public String index(
-            Principal principal,
-            @RequestParam(name = "passwordChanged", required = false) String passwordChanged,
-            Model model
-    ) {
+    @GetMapping({
+            "/",
+            "/dashboard",
+            "/account",
+            "/account/**",
+            "/admin",
+            "/admin/**"
+    })
+    public String index(Principal principal) {
         if (principal == null) {
             return "redirect:/login";
         }
 
-        UserProfileResult user = resolveUser(principal);
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        UUID userUuid = user.getId();
-        UserAuthoritiesResult authorities = getUserAuthoritiesUseCase.execute(userUuid);
-
-        List<String> roles = new ArrayList<>();
-        List<String> permissions = new ArrayList<>();
-
-        for (String auth : authorities.effectiveAuthorities()) {
-            if (auth.startsWith("ROLE_")) {
-                roles.add(auth.substring(5));
-            } else {
-                permissions.add(auth);
-            }
-        }
-
-        model.addAttribute("user", user);
-        model.addAttribute("roles", roles);
-        model.addAttribute("permissions", permissions);
-        if (passwordChanged != null) {
-            model.addAttribute("passwordChanged", true);
-        }
-        return "index";
+        return "forward:/index.html";
     }
 
     @GetMapping("/profile/edit")

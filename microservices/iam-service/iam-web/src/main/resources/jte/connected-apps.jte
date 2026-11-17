@@ -22,7 +22,7 @@
         <div class="flex items-center space-x-3">
             <a href="/" class="flex items-center gap-2" aria-label="ISTAD IAM">
                 <img src="https://www.istad.co/_next/image?url=%2Fschool-logo%2Fistad-lms-logo.png&amp;w=256&amp;q=75" alt="ISTAD LMS" class="h-10 w-auto max-w-[150px] object-contain">
-                <span class="text-lg font-bold tracking-tight text-indigo-400">ISTAD-IAM</span>
+                <span class="text-lg font-bold tracking-tight text-blue-400">ISTAD-IAM</span>
             </a>
         </div>
 
@@ -31,14 +31,14 @@
             <a href="/profile/edit" class="hover:text-white transition">${msg.get("profile.edit")}</a>
             <a href="/profile/password" class="hover:text-white transition">${msg.get("profile.changePassword")}</a>
             <a href="/profile/accounts" class="hover:text-white transition">${msg.get("profile.linkedAccounts")}</a>
-            <a href="/profile/apps" class="text-indigo-400 font-semibold">${msg.get("profile.connectedApps")}</a>
+            <a href="/profile/apps" class="text-blue-400 font-semibold">${msg.get("profile.connectedApps")}</a>
         </nav>
 
         <div class="flex items-center space-x-4">
             <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-full px-3 py-1.5 shadow-sm">
                 <span class="text-xs text-slate-400 font-medium mr-1">${msg.get("common.language")}:</span>
-                <a href="?lang=en" class="px-2.5 py-0.5 rounded-full text-xs font-semibold transition ${"en".equals(currentLang) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}">EN</a>
-                <a href="?lang=km" class="px-2.5 py-0.5 rounded-full text-xs font-semibold transition ${"km".equals(currentLang) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}">ខ្មែរ</a>
+                <a href="?lang=en" class="px-2.5 py-0.5 rounded-full text-xs font-semibold transition ${"en".equals(currentLang) ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}">EN</a>
+                <a href="?lang=km" class="px-2.5 py-0.5 rounded-full text-xs font-semibold transition ${"km".equals(currentLang) ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}">ខ្មែរ</a>
             </div>
 
             <form action="/logout" method="post" class="inline">
@@ -80,7 +80,7 @@
                         <div class="p-5 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                                 <div class="flex items-center space-x-3">
-                                    <span class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-lg">
+                                    <span class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-lg">
                                         📱
                                     </span>
                                     <div>
@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="flex flex-wrap gap-2 mt-4 ml-13">
                                     @for (var sc : app.scopes())
-                                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-indigo-300">
+                                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-blue-300">
                                             ${sc}
                                         </span>
                                     @endfor

@@ -22,7 +22,12 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
     Optional<UserJpaEntity> findByEmailAndIsDeletedFalse(String email);
 
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.isDeleted = false AND (u.username = :input OR LOWER(u.email) = LOWER(:input))")
+    @Query("""
+            SELECT DISTINCT u FROM UserJpaEntity u
+            LEFT JOIN IdentityJpaEntity fi ON fi.userId = u.id AND fi.isDeleted = false
+            WHERE u.isDeleted = false
+              AND (u.username = :input OR LOWER(u.email) = LOWER(:input) OR LOWER(fi.email) = LOWER(:input))
+            """)
     Optional<UserJpaEntity> findByUsernameOrEmail(@Param("input") String input);
 
     boolean existsByUsername(String username);
@@ -31,8 +36,8 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
     @Query("""
                 SELECT u FROM UserJpaEntity u
-                WHERE (:query IS NULL OR :query = '' OR LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))
-                  AND (:enabled IS NULL OR u.enabled = :enabled)
+                WHERE (cast(:query as string) IS NULL OR :query = '' OR LOWER(u.username) LIKE LOWER(CONCAT('%', cast(:query as string), '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', cast(:query as string), '%')))
+                  AND (cast(:enabled as boolean) IS NULL OR u.enabled = :enabled)
                   AND u.isDeleted = false
             """)
     Page<UserJpaEntity> findAllUsers(
