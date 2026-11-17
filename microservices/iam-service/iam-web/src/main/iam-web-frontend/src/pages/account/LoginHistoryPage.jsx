@@ -15,7 +15,7 @@ export default function LoginHistoryPage() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [rowsPerPage, setRowsPerPage] = useState(5)
 
   function loadHistory() {
     setLoading(true)
@@ -182,7 +182,7 @@ export default function LoginHistoryPage() {
           pageSize={rowsPerPage}
           onPageChange={setCurrentPage}
           onPageSizeChange={setRowsPerPage}
-          pageSizeOptions={[10, 20, 50]}
+          pageSizeOptions={[5, 10, 20, 50]}
         />
       </div>
     </div>

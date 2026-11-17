@@ -31,12 +31,7 @@ public class AccountSecurityController {
         var session = request.getSession(false);
         String currentSessionId = session == null ? null : session.getId();
         if (currentSessionId != null) {
-            String clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp == null || clientIp.isBlank()) clientIp = request.getRemoteAddr();
-            if ("0:0:0:0:0:0:0:1".equals(clientIp) || "::1".equals(clientIp)) clientIp = "127.0.0.1";
-            String userAgent = request.getHeader("User-Agent");
             accountSecurityRepository.touchLastLogin(uid);
-            accountSecurityRepository.registerSession(uid, currentSessionId, userAgent, userAgent, userAgent, clientIp);
         }
         return listSessions.execute(uid, currentSessionId);
     }
@@ -76,10 +71,6 @@ public class AccountSecurityController {
             String clientIp = extractClientIp(request);
             String userAgent = request.getHeader("User-Agent");
             accountSecurityRepository.recordLoginAttempt(uid, auth.getName(), true, "Password", userAgent, clientIp);
-            var session = request.getSession(false);
-            if (session != null) {
-                accountSecurityRepository.registerSession(uid, session.getId(), "Chrome", "Desktop", userAgent, clientIp);
-            }
             results = loginHistory.execute(uid, limit);
         }
         return results;

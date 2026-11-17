@@ -33,6 +33,17 @@ public class OAuthClientAdminController {
                 r.accessTokenTimeToLiveMinutes(),
                 r.refreshTokenTimeToLiveMinutes()));
     }
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('client:update', 'ROLE_ADMIN')")
+    public Object update(@PathVariable("id") String id, @Valid @RequestBody CreateOAuthClientRequest r) {
+        return useCase.update(id, new CreateOAuthClientCommand(
+                r.clientId(), r.clientName(), r.clientSecret(),
+                r.grantTypes(), r.authenticationMethods(), r.scopes(),
+                r.redirectUris(), r.postLogoutRedirectUris(),
+                r.requireAuthorizationConsent(),
+                r.accessTokenTimeToLiveMinutes(),
+                r.refreshTokenTimeToLiveMinutes()));
+    }
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('client:delete', 'ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)

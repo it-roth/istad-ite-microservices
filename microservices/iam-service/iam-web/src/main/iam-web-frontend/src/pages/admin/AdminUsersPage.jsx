@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  Search, Mail, UserPlus, ChevronDown, Bookmark, Columns3,
+  Search, Mail, UserPlus, ChevronDown,
   MoreHorizontal, Trash2, CheckCircle2, AlertCircle, RefreshCw,
   Monitor, Lock, Unlock, Shield, Users
 } from 'lucide-react'
@@ -49,7 +49,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('')
   const [actionMsg, setActionMsg] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [rowsPerPage, setRowsPerPage] = useState(5)
 
   // Checkbox selection state
   const [selectedUserIds, setSelectedUserIds] = useState([])
@@ -378,23 +378,6 @@ export default function AdminUsersPage() {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex items-center gap-2 justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-xs gap-1.5 text-muted-foreground border-border cursor-pointer"
-            >
-              <Bookmark size={14} /> Views
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-xs gap-1.5 text-muted-foreground border-border cursor-pointer"
-            >
-              <Columns3 size={14} /> Columns
-            </Button>
-          </div>
         </div>
 
         {/* Table matching screenshot 1 */}
@@ -581,7 +564,7 @@ export default function AdminUsersPage() {
             pageSize={rowsPerPage}
             onPageChange={setCurrentPage}
             onPageSizeChange={setRowsPerPage}
-            pageSizeOptions={[10, 20, 50]}
+            pageSizeOptions={[5, 10, 20, 50]}
           />
         </div>
 

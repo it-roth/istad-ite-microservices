@@ -94,6 +94,7 @@ export const clientsApi = {
   list: () => req('/admin/oauth-clients'),
   get: (id) => req(`/admin/oauth-clients/${id}`),
   create: (data) => req('/admin/oauth-clients', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => req(`/admin/oauth-clients/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => req(`/admin/oauth-clients/${id}`, { method: 'DELETE' }),
 }
 

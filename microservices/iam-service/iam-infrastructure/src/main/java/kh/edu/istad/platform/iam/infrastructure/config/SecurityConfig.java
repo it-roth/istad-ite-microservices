@@ -202,16 +202,34 @@ public class SecurityConfig {
                                             "INSERT INTO iam_login_history(user_uuid, principal_name, success, method, user_agent, ip_address, location) VALUES (?, ?, true, 'Password', ?, ?, 'Phnom Penh, Cambodia')",
                                             userUuid, username, userAgent, clientIp);
 
-                                    // Register session in iam_sessions
                                     var session = request.getSession(false);
                                     if (session != null) {
-                                        jdbcTemplate.update(
-                                                """
-                                                        INSERT INTO iam_sessions(id, user_uuid, browser, device, user_agent, ip_address, location)
-                                                        VALUES (?, ?, 'Chrome', 'Desktop', ?, ?, 'Phnom Penh, Cambodia')
-                                                        ON CONFLICT (id) DO UPDATE SET last_activity=CURRENT_TIMESTAMP, revoked_at=NULL
-                                                        """,
-                                                session.getId(), userUuid, userAgent, clientIp);
+                                        String browser = "Chrome";
+                                        String device = "Desktop";
+                                        if (userAgent != null) {
+                                            String ua = userAgent.toLowerCase();
+                                            if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone")) {
+                                                device = "Mobile";
+                                            } else if (ua.contains("tablet") || ua.contains("ipad")) {
+                                                device = "Tablet";
+                                            }
+                                            if (ua.contains("edg")) {
+                                                browser = "Edge";
+                                            } else if (ua.contains("chrome") && !ua.contains("edg")) {
+                                                browser = "Chrome";
+                                            } else if (ua.contains("firefox")) {
+                                                browser = "Firefox";
+                                            } else if (ua.contains("safari") && !ua.contains("chrome")) {
+                                                browser = "Safari";
+                                            }
+                                        }
+
+                                        session.setAttribute("ipAddress", clientIp);
+                                        session.setAttribute("userAgent", userAgent);
+                                        session.setAttribute("userUuid", userUuid.toString());
+                                        session.setAttribute("browser", browser);
+                                        session.setAttribute("device", device);
+                                        session.setAttribute("location", "Phnom Penh, Cambodia");
                                     }
                                 }
                             } catch (Exception ex) {
@@ -246,6 +264,13 @@ public class SecurityConfig {
                                 response.sendRedirect(targetUrl);
                             }
                         })
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll());
 
         return http.build();

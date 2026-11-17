@@ -83,7 +83,7 @@ export default function RoleDetailPage() {
   }, [rolePerms, filter])
 
   function formatDateTime(isoStr) {
-    if (!isoStr) return '9 Nov 2026, 16:35'
+    if (!isoStr) return '—'
     try {
       const d = new Date(isoStr)
       return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' +

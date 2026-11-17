@@ -51,7 +51,7 @@ export default function AdminCatalogPage({ type }) {
   const [typeFilter, setTypeFilter] = useState('ALL')
 
   // Pagination
-  const [rowsPerPage, setRowsPerPage] = useState(20)
+  const [rowsPerPage, setRowsPerPage] = useState(5)
   const [currentPage, setCurrentPage] = useState(1)
 
   // Create form state
@@ -380,7 +380,7 @@ export default function AdminCatalogPage({ type }) {
             pageSize={rowsPerPage}
             onPageChange={setCurrentPage}
             onPageSizeChange={setRowsPerPage}
-            pageSizeOptions={[10, 20, 50]}
+            pageSizeOptions={[5, 10, 20, 50]}
           />
         </div>
 

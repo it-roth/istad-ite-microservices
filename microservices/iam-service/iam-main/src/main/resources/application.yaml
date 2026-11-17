@@ -6,6 +6,18 @@ spring:
     name: iam-service
   profiles:
     active: dev
+  session:
+    store-type: ${SPRING_SESSION_STORE_TYPE:redis}
+    redis:
+      namespace: spring:session:iam
+      flush-mode: on_save
+    timeout: ${SPRING_SESSION_TIMEOUT:30m}
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      timeout: 2000ms
   config:
     import:
       - "optional:file:.env[.properties]"
@@ -25,10 +37,10 @@ spring:
         instance-id: ${spring.application.name}-${random.value}
 
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:

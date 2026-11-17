@@ -22,7 +22,7 @@ export default function AuditLogPage() {
   const [actionFilter, setActionFilter] = useState('ALL')
   const [timeFilter, setTimeFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(20)
+  const [rowsPerPage, setRowsPerPage] = useState(5)
 
   function loadLogs() {
     setLoading(true)
@@ -249,7 +249,7 @@ export default function AuditLogPage() {
             pageSize={rowsPerPage}
             onPageChange={setCurrentPage}
             onPageSizeChange={setRowsPerPage}
-            pageSizeOptions={[10, 20, 50, 100]}
+            pageSizeOptions={[5, 10, 20, 50, 100]}
           />
         </div>
 

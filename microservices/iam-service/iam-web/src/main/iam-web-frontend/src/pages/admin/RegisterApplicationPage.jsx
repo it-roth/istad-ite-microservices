@@ -1,57 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '@/context/AppContext'
-import { clientsApi, securityConfigApi } from '@/lib/api'
+import { clientsApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Server, Globe, Plus, Trash2, X, AlertCircle, Shield, Lock, Clock, RefreshCw, Sliders } from 'lucide-react'
+import { Server, Globe, Plus, Trash2, X, AlertCircle, Shield, Lock, Clock, RefreshCw } from 'lucide-react'
 
 export default function RegisterApplicationPage() {
   const navigate = useNavigate()
   const { tr, lang } = useApp()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
-  // System Configuration State (loaded live from API)
-  const [secConfig, setSecConfig] = useState({
-    mfaRequired: false,
-    maxFailedLoginAttempts: 5,
-    sessionTimeoutMinutes: 30,
-    passwordMinimumLength: 8,
-    passwordRequireUppercase: true,
-    passwordRequireNumber: true,
-    passwordRequireSymbol: false,
-  })
-  const [loadingConfig, setLoadingConfig] = useState(false)
-
-  // Load real system configuration from API
-  async function loadSystemConfig() {
-    setLoadingConfig(true)
-    try {
-      const data = await securityConfigApi.get()
-      if (data) {
-        setSecConfig({
-          mfaRequired: Boolean(data.mfaRequired),
-          maxFailedLoginAttempts: data.maxFailedLoginAttempts || 5,
-          sessionTimeoutMinutes: data.sessionTimeoutMinutes || 30,
-          passwordMinimumLength: data.passwordMinimumLength || 8,
-          passwordRequireUppercase: Boolean(data.passwordRequireUppercase),
-          passwordRequireNumber: Boolean(data.passwordRequireNumber),
-          passwordRequireSymbol: Boolean(data.passwordRequireSymbol),
-        })
-      }
-    } catch (err) {
-      console.warn('Could not load system security config from API:', err)
-    } finally {
-      setLoadingConfig(false)
-    }
-  }
-
-  useEffect(() => {
-    loadSystemConfig()
-  }, [])
 
   // Form State matching screenshot 2 & 3 exactly
   const [form, setForm] = useState({
@@ -165,11 +126,6 @@ export default function RegisterApplicationPage() {
       }
 
       await clientsApi.create(payload)
-      try {
-        await securityConfigApi.update(secConfig)
-      } catch (cfgErr) {
-        console.warn('System config update note:', cfgErr)
-      }
       navigate('/admin/applications')
     } catch (err) {
       setError(err.message || 'Failed to register application.')
@@ -179,10 +135,10 @@ export default function RegisterApplicationPage() {
   }
 
   return (
-    <div className="min-h-full bg-background p-6 md:p-8">
+    <div className="min-h-full bg-background p-6 md:p-8 pb-0 md:pb-0">
       <div className="mx-auto max-w-5xl space-y-8">
 
-        {/* Page Title & Subtitle */}
+        {/* Header */}
         <div className="pb-4 border-b border-border/60">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {tr('apps.registerTitle')}
@@ -200,7 +156,7 @@ export default function RegisterApplicationPage() {
 
         <form onSubmit={handleSubmit} className="space-y-10">
 
-          {/* SECTION 1: Application */}
+          {/* Application */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
             <div className="md:col-span-4 space-y-1">
               <h2 className="text-sm font-semibold text-foreground">{tr('apps.application')}</h2>
@@ -293,7 +249,7 @@ export default function RegisterApplicationPage() {
 
           <div className="border-t border-border/60"></div>
 
-          {/* SECTION 2: Sign-in */}
+          {/* Authentication */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-4 space-y-1">
               <h2 className="text-sm font-semibold text-foreground">{tr('apps.signInLabel')}</h2>
@@ -446,7 +402,7 @@ export default function RegisterApplicationPage() {
 
           <div className="border-t border-border/60"></div>
 
-          {/* SECTION 3: Access */}
+          {/* Scopes & consent */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-4 space-y-1">
               <h2 className="text-sm font-semibold text-foreground">{tr('apps.accessLabel')}</h2>
@@ -530,7 +486,7 @@ export default function RegisterApplicationPage() {
 
           <div className="border-t border-border/60"></div>
 
-          {/* SECTION 4: Tokens */}
+          {/* Token lifetimes */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-4 space-y-1">
               <h2 className="text-sm font-semibold text-foreground">{tr('apps.tokensLabel')}</h2>
@@ -577,186 +533,11 @@ export default function RegisterApplicationPage() {
                   </p>
                 </div>
               </div>
-
-              {/* Session Inactivity Timeout */}
-              <div className="pt-2 border-t border-border/40 space-y-1.5">
-                <label htmlFor="session-timeout" className="text-xs font-semibold text-foreground block">
-                  {lang === 'km' ? 'គោលការណ៍សម័យប្រជុំ និងផុតកំណត់ (Session Inactivity Timeout)' : 'Session & Timeout Policy'}
-                </label>
-                <p className="text-[11px] text-muted-foreground">
-                  {lang === 'km'
-                    ? 'កំណត់រយៈពេលដែលអ្នកប្រើអាចនៅសកម្មមុនពេលត្រូវទាមទារឱ្យចូលម្តងទៀត (គិតជានាទី)។'
-                    : 'Specify inactivity timeouts and session lifespan across client browsers.'}
-                </p>
-                <div className="w-full sm:w-48 pt-1">
-                  <label className="text-[11px] text-muted-foreground block mb-1">
-                    {lang === 'km' ? 'អាយុកាលសម័យប្រជុំ (នាទី)' : 'Session Inactivity Timeout (minutes)'}
-                  </label>
-                  <Input
-                    id="session-timeout"
-                    type="number"
-                    min={1}
-                    max={1440}
-                    value={secConfig.sessionTimeoutMinutes}
-                    onChange={e => setSecConfig({ ...secConfig, sessionTimeoutMinutes: parseInt(e.target.value, 10) || 30 })}
-                    className="h-9 text-xs"
-                  />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {lang === 'km'
-                    ? 'សម័យប្រជុំដែលមិនសកម្មលើសពីពេលនេះនឹងត្រូវចេញដោយស្វ័យប្រវត្តិ។'
-                    : 'Inactive user sessions will be automatically terminated after this duration.'}
-                </p>
-              </div>
             </div>
           </div>
 
-          <div className="border-t border-border/60"></div>
-
-          {/* SECTION 5: Authentication Policies (Real API data) */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-4 space-y-1">
-              <div className="flex items-center gap-2">
-                <Shield size={15} className="text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  {lang === 'km' ? 'គោលការណ៍ផ្ទៀងផ្ទាត់' : 'Authentication Policies'}
-                </h2>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {lang === 'km'
-                  ? 'គ្រប់គ្រងការទាមទារ 2FA និងការចាក់សោគណនីពេលបញ្ចូលខុសច្រើនដង។'
-                  : 'Manage mandatory multi-factor authentication and account lockout after repeated failed attempts.'}
-              </p>
-            </div>
-
-            <div className="md:col-span-8 space-y-3">
-              <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3.5 shadow-xs">
-                <div>
-                  <p className="text-xs font-semibold text-foreground">
-                    {lang === 'km' ? 'ទាមទារការផ្ទៀងផ្ទាត់ ២ ជំហាន (Enforce MFA)' : 'Enforce Multi-Factor Authentication (MFA)'}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {lang === 'km'
-                      ? 'តម្រូវឱ្យអ្នកប្រើប្រាស់ទាំងអស់កំណត់រចនាសម្ព័ន្ធការផ្ទៀងផ្ទាត់ ២ ជំហាន។'
-                      : 'Require all users across the organization to configure 2-step verification.'}
-                  </p>
-                </div>
-                <Switch
-                  checked={secConfig.mfaRequired}
-                  onCheckedChange={val => setSecConfig({ ...secConfig, mfaRequired: val })}
-                />
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-3.5 shadow-xs space-y-2">
-                <label className="text-xs font-semibold text-foreground block">
-                  {lang === 'km' ? 'ចំនួនប៉ុនប៉ងចូលខុសអតិបរមា មុនពេលចាក់សោ' : 'Max Failed Login Attempts Before Lockout'}
-                </label>
-                <p className="text-[11px] text-muted-foreground">
-                  {lang === 'km'
-                    ? 'គណនីនឹងត្រូវចាក់សោនៅពេលបញ្ចូលពាក្យសម្ងាត់មិនត្រឹមត្រូវជាប់ៗគ្នាលើសពីចំនួននេះ។'
-                    : 'Account will be locked when consecutive incorrect passwords exceed this threshold.'}
-                </p>
-                <div className="w-full sm:w-44 pt-1">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={secConfig.maxFailedLoginAttempts}
-                    onChange={e => setSecConfig({ ...secConfig, maxFailedLoginAttempts: parseInt(e.target.value, 10) || 5 })}
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-border/60"></div>
-
-          {/* SECTION 6: Password Policies (Real API data) */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-4 space-y-1">
-              <div className="flex items-center gap-2">
-                <Lock size={15} className="text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  {lang === 'km' ? 'គោលការណ៍ពាក្យសម្ងាត់' : 'Password Policies'}
-                </h2>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {lang === 'km'
-                  ? 'កំណត់ភាពស្មុគស្មាញ ប្រវែងអប្បបរមា និងលក្ខខណ្ឌតួអក្សរសម្រាប់ពាក្យសម្ងាត់។'
-                  : 'Define complexity, minimum length, and character composition rules for user passwords.'}
-              </p>
-            </div>
-
-            <div className="md:col-span-8 space-y-3">
-              <div className="rounded-lg border border-border bg-card p-3.5 shadow-xs space-y-2">
-                <label className="text-xs font-semibold text-foreground block">
-                  {lang === 'km' ? 'ប្រវែងពាក្យសម្ងាត់អប្បបរមា' : 'Minimum Password Length'}
-                </label>
-                <div className="w-full sm:w-44">
-                  <Input
-                    type="number"
-                    min={6}
-                    max={64}
-                    value={secConfig.passwordMinimumLength}
-                    onChange={e => setSecConfig({ ...secConfig, passwordMinimumLength: parseInt(e.target.value, 10) || 8 })}
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {lang === 'km' ? 'អនុសាសន៍៖ យ៉ាងហោចណាស់ ៨ តួអក្សរ' : 'Recommended: At least 8 characters'}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-3.5 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-foreground">
-                      {lang === 'km' ? 'ទាមទារអក្សរធំ (A-Z)' : 'Require Uppercase Letter (A-Z)'}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">At least one uppercase character.</p>
-                  </div>
-                  <Switch
-                    checked={secConfig.passwordRequireUppercase}
-                    onCheckedChange={val => setSecConfig({ ...secConfig, passwordRequireUppercase: val })}
-                  />
-                </div>
-
-                <div className="border-t border-border/40"></div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-foreground">
-                      {lang === 'km' ? 'ទាមទារលេខ (0-9)' : 'Require Number (0-9)'}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">At least one numerical digit.</p>
-                  </div>
-                  <Switch
-                    checked={secConfig.passwordRequireNumber}
-                    onCheckedChange={val => setSecConfig({ ...secConfig, passwordRequireNumber: val })}
-                  />
-                </div>
-
-                <div className="border-t border-border/40"></div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-foreground">
-                      {lang === 'km' ? 'ទាមទារនិមិត្តសញ្ញាពិសេស (!@#$%)' : 'Require Special Symbol (!@#$%)'}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">At least one special non-alphanumeric symbol.</p>
-                  </div>
-                  <Switch
-                    checked={secConfig.passwordRequireSymbol}
-                    onCheckedChange={val => setSecConfig({ ...secConfig, passwordRequireSymbol: val })}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Bar matching screenshot */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-border">
+          {/* Actions */}
+          <div className="sticky bottom-0 -mx-6 md:-mx-8 px-6 md:px-8 py-4 bg-background/95 backdrop-blur-md border-t border-border flex items-center justify-end gap-3 z-30 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.3)]">
             <Button
               type="button"
               variant="outline"
@@ -768,7 +549,7 @@ export default function RegisterApplicationPage() {
             <Button
               type="submit"
               disabled={saving}
-              className="px-5 cursor-pointer"
+              className="px-5 cursor-pointer shadow-xs"
             >
               {saving ? '...' : tr('apps.registerBtn')}
             </Button>

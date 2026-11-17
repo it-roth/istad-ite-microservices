@@ -43,6 +43,8 @@ const routeTitles = {
   '/admin/clients': { group: 'Administration', title: 'Applications' },
   '/admin/clients/new': { group: 'Administration', title: 'Applications', sub: 'New' },
   '/admin/audit': { group: 'Administration', title: 'Audit log' },
+  '/admin/configuration': { group: 'Administration', title: 'System configuration' },
+  '/admin/security-config': { group: 'Administration', title: 'System configuration' },
 }
 
 export default function AppLayout() {
@@ -243,7 +245,7 @@ export default function AppLayout() {
         </header>
 
         {/* Scrollable Main Content */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto">
+        <main ref={mainRef} className="flex-1 overflow-y-auto no-scrollbar">
           <Outlet />
         </main>
       </div>

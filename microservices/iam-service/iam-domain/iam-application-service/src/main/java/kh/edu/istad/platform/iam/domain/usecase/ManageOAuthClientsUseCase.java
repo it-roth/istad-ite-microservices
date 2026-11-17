@@ -13,5 +13,6 @@ public class ManageOAuthClientsUseCase {
     public List<OAuthClientAdminResult> list() { return repository.findAll(); }
     public OAuthClientAdminResult get(String id) { return repository.findById(id).orElseThrow(); }
     public OAuthClientAdminResult create(CreateOAuthClientCommand command) { return repository.create(command); }
+    public OAuthClientAdminResult update(String id, CreateOAuthClientCommand command) { return repository.update(id, command); }
     public void delete(String id) { repository.delete(id); }
 }

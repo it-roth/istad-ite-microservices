@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Kantumruy Pro', system-ui, sans-serif;
+  --font-sans: 'Google Sans', 'Google Sans Flex', 'Google Sans Text', 'Kantumruy Pro', 'Noto Sans Khmer', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -29,7 +29,8 @@
 }
 
 @layer base {
-  /* Official Clean White and Royal Blue Theme (No muddy gray in light mode) */
+
+  /* Light theme */
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;
@@ -53,7 +54,7 @@
     --radius: 0.5rem;
   }
 
-  /* Deep Modern Slate Dark Theme — Crisp & Clean */
+  /* Dark theme */
   .dark {
     --background: 222 47% 9%;
     --foreground: 210 40% 98%;
@@ -78,6 +79,7 @@
 }
 
 @layer base {
+
   html,
   body,
   #root {
@@ -93,13 +95,43 @@
   }
 
   /* Remove all underline on links and hovers */
-  a, a:hover, a:focus {
+  a,
+  a:hover,
+  a:focus {
     text-decoration: none !important;
   }
 
-  /* Smooth light/dark mode color transitions */
-  html {
-    color-scheme: light dark;
+  /* Color scheme */
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  input,
+  select,
+  textarea {
+    color-scheme: light;
+  }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    color-scheme: dark;
+  }
+
+  /* Number inputs */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
   }
 
   body {
@@ -111,10 +143,10 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Prevent browser autofill from adding unwanted background colors */
+  /* Autofill */
   input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
     -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
@@ -122,7 +154,7 @@
     transition: background-color 50000s ease-in-out 0s;
   }
 
-  /* Universal Checkbox Styling: White background, subtle border, blue checkmark */
+  /* Checkbox */
   input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
@@ -138,17 +170,21 @@
     margin: 0;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
+
   input[type="checkbox"]:hover {
     border-color: #94a3b8 !important;
   }
+
   input[type="checkbox"]:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
   }
+
   input[type="checkbox"]:checked {
     background-color: #ffffff !important;
     border-color: #2563eb !important;
   }
+
   input[type="checkbox"]:checked::before {
     content: "";
     width: 0.5rem;
@@ -157,26 +193,32 @@
     border-bottom: 2px solid #2563eb;
     transform: rotate(-45deg) translate(0.5px, -1px);
   }
+
   .dark input[type="checkbox"] {
     background-color: hsl(var(--card)) !important;
     border-color: #475569 !important;
   }
+
   .dark input[type="checkbox"]:hover {
     border-color: #64748b !important;
   }
+
   .dark input[type="checkbox"]:checked {
     background-color: hsl(var(--card)) !important;
     border-color: #3b82f6 !important;
   }
+
   .dark input[type="checkbox"]:checked::before {
     border-left-color: #3b82f6;
     border-bottom-color: #3b82f6;
   }
 
-  /* Universal Shadcn Select Dropdown Styling */
+  /* Select */
   select {
-    height: 2.25rem; /* h-9 */
-    font-size: 0.875rem; /* text-sm */
+    height: 2.25rem;
+    /* h-9 */
+    font-size: 0.875rem;
+    /* text-sm */
     font-weight: 500;
     line-height: 1.25rem;
     border-radius: calc(var(--radius) - 2px);
@@ -189,9 +231,55 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     cursor: pointer;
   }
+
   select:focus-visible {
     outline: none;
     box-shadow: 0 0 0 1px hsl(var(--ring));
     border-color: hsl(var(--ring));
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25) !important;
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.45) !important;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Utility class to completely hide scrollbar while keeping smooth scrolling */
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .no-scrollbar,
+  .scrollbar-none {
+    -ms-overflow-style: none !important;
+    /* IE and Edge */
+    scrollbar-width: none !important;
+    /* Firefox */
   }
 }

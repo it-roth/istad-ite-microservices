@@ -23,7 +23,8 @@ import {
   ShieldCheck, Users, Fingerprint,
   Mail, ScrollText, ChevronsUpDown, LogOut,
   Eye,
-  AppWindow
+  AppWindow,
+  Settings
 } from 'lucide-react'
 import KeyIcon from '@/components/icons/KeyIcon'
 import { getMainNameInitials, isValidPictureUrl } from '@/components/common/UserAvatar'
@@ -128,8 +129,11 @@ export default function Sidebar({ user, collapsed, onToggle }) {
   const roleTitle = isSuperAdmin ? 'Super Admin' : (isAdmin ? 'Realm Admin' : 'End User')
 
   function handleSignOut() {
-    localStorage.removeItem('access_token')
-    window.location.href = 'http://localhost:39000/login?logout'
+    try {
+      localStorage.clear()
+      sessionStorage.clear()
+    } catch (e) {}
+    window.location.href = '/logout'
   }
 
   return (
@@ -248,6 +252,13 @@ export default function Sidebar({ user, collapsed, onToggle }) {
                   label={tr('nav.auditLog')}
                   collapsed={collapsed}
                 />
+                <NavItem
+                  to="/admin/configuration"
+                  aliases={['/admin/security-config']}
+                  icon={Settings}
+                  label={tr('nav.configuration')}
+                  collapsed={collapsed}
+                />
               </nav>
             </div>
           ) : (
@@ -314,7 +325,7 @@ export default function Sidebar({ user, collapsed, onToggle }) {
               </DropdownMenuItem>
               {isAdmin && (
                 <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer text-xs">
-                  <ShieldCheck className="mr-2 h-3.5 w-3.5 text-blue-600" /> Keycloak Realm Admin Console
+                  <ShieldCheck className="mr-2 h-3.5 w-3.5 text-blue-600" /> ISTAD IAM Admin Console
                 </DropdownMenuItem>
               )}
               {isAdmin && (

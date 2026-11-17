@@ -1,0 +1,20 @@
+volumes:
+  ite-redis-vol:
+    driver: local
+
+networks:
+  ite-net:
+    external: true
+
+services:
+  ite-redis:
+    container_name: ite-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ite-redis-vol:/data
+    networks:
+      - ite-net

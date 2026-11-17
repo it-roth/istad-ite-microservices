@@ -1,97 +1,120 @@
 services:
-  kafka1:
-    image: confluentinc/cp-kafka:7.8.0
-    hostname: kafka1
-    container_name: kafka1
+  istad-kafka-1:
+    image: confluentinc/cp-kafka:latest
+    container_name: istad-kafka-1
     ports:
-      - "19092:9092"
+      - "29092:9092"
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_BROKER_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka1:9093,2@kafka2:9093,3@kafka3:9093'
-      KAFKA_LISTENERS: 'PLAINTEXT://kafka1:9092,CONTROLLER://kafka1:9093'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka1:9092'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@istad-kafka-1:9091,2@istad-kafka-2:9091,3@istad-kafka-3:9091'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9090,CONTROLLER://istad-kafka-1:9091,EXTERNAL://:9092'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://istad-kafka-1:9090,EXTERNAL://localhost:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
+      # Replicates consumer offset tracking across all 3 brokers.
+      # If 1 or 2 brokers crash,
+      # consumers will not lose track of which messages they already processed.
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_MIN_INSYNC_REPLICAS: 2
+      # Gives multiple consumer instances 3 seconds to join the group together
+      # when an application scales up or restarts
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      # Dynamic formula = (N/2 + 1)
+      # Requires at least 2 replicas to acknowledge a transactional write.
+      # This guarantees data durability while still tolerating 1 broker going offline
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      # Replicates transaction metadata across all 3 brokers
+      # so active transactions survive node failures.
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
     volumes:
-      - ./kafka1/data:/var/lib/kafka/data
+      - istad-kafka-1-vol:/var/lib/kafka/data
     networks:
-      - kafka-net
+      - ite-net
 
-  kafka2:
-    image: confluentinc/cp-kafka:7.8.0
-    hostname: kafka2
-    container_name: kafka2
+  istad-kafka-2:
+    image: confluentinc/cp-kafka:latest
+    container_name: istad-kafka-2
     ports:
-      - "19094:9092"
+      - "29094:9094"
     environment:
       KAFKA_NODE_ID: 2
-      KAFKA_BROKER_ID: 2
       KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka1:9093,2@kafka2:9093,3@kafka3:9093'
-      KAFKA_LISTENERS: 'PLAINTEXT://kafka2:9092,CONTROLLER://kafka2:9093'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka2:9092'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@istad-kafka-1:9091,2@istad-kafka-2:9091,3@istad-kafka-3:9091'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9090,CONTROLLER://istad-kafka-2:9091,EXTERNAL://:9094'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://istad-kafka-2:9090,EXTERNAL://localhost:29094
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
     volumes:
-      - ./kafka2/data:/var/lib/kafka/data
+      - ./secrets:/etc/kafka/secrets
+      - ./config:/etc/kafka/config
+      - istad-kafka-2-vol:/var/lib/kafka/data
     networks:
-      - kafka-net
+      - ite-net
 
-  kafka3:
-    image: confluentinc/cp-kafka:7.8.0
-    hostname: kafka3
-    container_name: kafka3
+  istad-kafka-3:
+    image: confluentinc/cp-kafka:latest
+    container_name: istad-kafka-3
     ports:
-      - "19096:9092"
+      - "29096:9096"
     environment:
       KAFKA_NODE_ID: 3
-      KAFKA_BROKER_ID: 3
       KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka1:9093,2@kafka2:9093,3@kafka3:9093'
-      KAFKA_LISTENERS: 'PLAINTEXT://kafka3:9092,CONTROLLER://kafka3:9093'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka3:9092'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@istad-kafka-1:9091,2@istad-kafka-2:9091,3@istad-kafka-3:9091'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9090,CONTROLLER://istad-kafka-3:9091,EXTERNAL://:9096'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://istad-kafka-3:9090,EXTERNAL://localhost:29096
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: '4L6g3nShT-eMCtK--X86sw'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
     volumes:
-      - ./kafka3/data:/var/lib/kafka/data
+      - ./secrets:/etc/kafka/secrets
+      - ./config:/etc/kafka/config
+      - istad-kafka-3-vol:/var/lib/kafka/data
     networks:
-      - kafka-net
+      - ite-net
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-cluster-ui
+  istad-kafbat-ui:
+    container_name: istad-kafbat-ui
+    image: ghcr.io/kafbat/kafka-ui:latest
     ports:
-      - "8080:8080"
+      - 18080:8080
+    depends_on:
+      - istad-kafka-1
+      - istad-kafka-2
+      - istad-kafka-3
+    #    - istad-schema-registry
+    #    - istad-debezium-kafka-connect
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092
-    depends_on:
-      - kafka1
-      - kafka2
-      - kafka3
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: istad-kafka-1:9090,istad-kafka-2:9090,istad-kafka-3:9090
+      #    KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://istad-schema-registry:8081
+      #    KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: first
+      #    KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://istad-debezium-kafka-connect:8083
+      DYNAMIC_CONFIG_ENABLED: 'true'
     networks:
-      - kafka-net
+      ite-net:
+
+volumes:
+  istad-kafka-1-vol:
+  istad-kafka-2-vol:
+  istad-kafka-3-vol:
+  istad-kafka-ui-data:
 
 networks:
-  kafka-net:
-    driver: bridge
+  ite-net:
+    external: true

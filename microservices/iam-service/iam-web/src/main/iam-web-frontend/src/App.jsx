@@ -19,6 +19,7 @@ import RoleDetailPage from '@/pages/admin/RoleDetailPage'
 import ApplicationsPage from '@/pages/admin/ApplicationsPage'
 import RegisterApplicationPage from '@/pages/admin/RegisterApplicationPage'
 import AuditLogPage from '@/pages/admin/AuditLogPage'
+import SystemConfigurationPage from '@/pages/admin/SystemConfigurationPage'
 import './App.css'
 
 function AdminRoute({ children }) {
@@ -70,6 +71,8 @@ export default function App() {
           <Route path="admin/clients" element={<AdminRoute><ApplicationsPage /></AdminRoute>} />
           <Route path="admin/clients/new" element={<AdminRoute><RegisterApplicationPage /></AdminRoute>} />
           <Route path="admin/audit" element={<AdminRoute><AuditLogPage /></AdminRoute>} />
+          <Route path="admin/configuration" element={<AdminRoute><SystemConfigurationPage /></AdminRoute>} />
+          <Route path="admin/security-config" element={<AdminRoute><SystemConfigurationPage /></AdminRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/account" replace />} />
       </Routes>

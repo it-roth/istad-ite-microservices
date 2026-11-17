@@ -575,74 +575,72 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="md:col-span-8">
-              <div className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                  {/* Avatar Preview */}
-                  <div className="relative shrink-0">
-                    <UserAvatar
-                      user={{ ...profileData, ...form }}
-                      src={form.pictureUrl}
-                      className="h-20 w-20 border-2 border-blue-200 dark:border-blue-900 bg-slate-100 dark:bg-slate-800 shadow-xs"
-                      textClassName="text-2xl font-bold text-slate-700 dark:text-slate-200"
-                    />
-                  </div>
-
-                  {/* Actions: Upload file or remove */}
-                  <div className="space-y-2 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Label
-                        htmlFor="avatar-file-upload"
-                        className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
-                      >
-                        <Upload size={13} className="text-blue-600 dark:text-blue-400" />
-                        <span>{tr('profile.uploadPhoto')}</span>
-                      </Label>
-                      <input
-                        ref={fileInputRef}
-                        id="avatar-file-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-
-                      {form.pictureUrl && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemovePicture}
-                          className="text-xs h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1"
-                        >
-                          <Trash2 size={13} />
-                          <span>{tr('profile.removePhoto')}</span>
-                        </Button>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {tr('profile.photoHint')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Direct Image URL input */}
-                <div className="pt-2 border-t border-border">
-                  <Label htmlFor="pictureUrl" className="text-xs font-medium text-foreground flex items-center h-5">
-                    {tr('profile.pasteUrl')}
-                  </Label>
-                  <Input
-                    id="pictureUrl"
-                    name="pictureUrl"
-                    value={form.pictureUrl}
-                    onChange={handleChange}
-                    placeholder="https://example.com/photo.jpg"
-                    className="mt-1 text-xs h-9"
+            <div className="md:col-span-8 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                {/* Avatar Preview */}
+                <div className="relative shrink-0">
+                  <UserAvatar
+                    user={{ ...profileData, ...form }}
+                    src={form.pictureUrl}
+                    className="h-20 w-20 border-2 border-blue-200 dark:border-blue-900 bg-slate-100 dark:bg-slate-800 shadow-xs"
+                    textClassName="text-2xl font-bold text-slate-700 dark:text-slate-200"
                   />
-                  {fieldErrors.pictureUrl && (
-                    <p className="text-[11px] text-rose-500 font-medium mt-1">{fieldErrors.pictureUrl}</p>
-                  )}
                 </div>
+
+                {/* Actions: Upload file or remove */}
+                <div className="space-y-2 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label
+                      htmlFor="avatar-file-upload"
+                      className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-border bg-background hover:bg-muted/50 transition-colors shadow-xs"
+                    >
+                      <Upload size={13} className="text-primary" />
+                      <span>{tr('profile.uploadPhoto')}</span>
+                    </Label>
+                    <input
+                      ref={fileInputRef}
+                      id="avatar-file-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+
+                    {form.pictureUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemovePicture}
+                        className="text-xs h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1"
+                      >
+                        <Trash2 size={13} />
+                        <span>{tr('profile.removePhoto')}</span>
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {tr('profile.photoHint')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Direct Image URL input */}
+              <div>
+                <Label htmlFor="pictureUrl" className="text-xs font-medium text-foreground flex items-center h-5">
+                  {tr('profile.pasteUrl')}
+                </Label>
+                <Input
+                  id="pictureUrl"
+                  name="pictureUrl"
+                  value={form.pictureUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/photo.jpg"
+                  className="mt-1 text-xs h-9"
+                />
+                {fieldErrors.pictureUrl && (
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">{fieldErrors.pictureUrl}</p>
+                )}
               </div>
             </div>
           </div>

@@ -8,5 +8,6 @@ public interface OAuthClientAdminRepository {
     List<OAuthClientAdminResult> findAll();
     Optional<OAuthClientAdminResult> findById(String id);
     OAuthClientAdminResult create(CreateOAuthClientCommand command);
+    OAuthClientAdminResult update(String id, CreateOAuthClientCommand command);
     void delete(String id);
 }

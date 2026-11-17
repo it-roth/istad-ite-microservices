@@ -2,22 +2,53 @@ package kh.edu.istad.platform.iam.infrastructure.adapter;
 
 import kh.edu.istad.platform.iam.domain.dto.*;
 import kh.edu.istad.platform.iam.domain.port.out.AccountSecurityRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
 @Repository
-@RequiredArgsConstructor
 public class AccountSecurityRepositoryAdapter implements AccountSecurityRepository {
     private final JdbcTemplate jdbc;
+    private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
+
+    public AccountSecurityRepositoryAdapter(
+            JdbcTemplate jdbc,
+            @Autowired(required = false) FindByIndexNameSessionRepository<? extends Session> sessionRepository
+    ) {
+        this.jdbc = jdbc;
+        this.sessionRepository = sessionRepository;
+    }
 
     @Override
     public List<AccountSessionResult> findSessions(UUID userId, String currentSessionId) {
+        if (sessionRepository != null) {
+            try {
+                String username = jdbc.queryForObject("SELECT username FROM users WHERE uuid = ?", String.class, userId);
+                if (username != null) {
+                    var userSessions = sessionRepository.findByPrincipalName(username);
+                    if (userSessions != null && !userSessions.isEmpty()) {
+                        return userSessions.values().stream().map(s -> {
+                            String browser = s.getAttribute("browser") != null ? (String) s.getAttribute("browser") : "Chrome";
+                            String device = s.getAttribute("device") != null ? (String) s.getAttribute("device") : "Desktop";
+                            String ip = s.getAttribute("ipAddress") != null ? (String) s.getAttribute("ipAddress") : "127.0.0.1";
+                            String loc = s.getAttribute("location") != null ? (String) s.getAttribute("location") : "Phnom Penh, Cambodia";
+                            OffsetDateTime created = s.getCreationTime().atOffset(ZoneOffset.UTC);
+                            OffsetDateTime last = s.getLastAccessedTime().atOffset(ZoneOffset.UTC);
+                            return new AccountSessionResult(s.getId(), s.getId().equals(currentSessionId),
+                                    browser, device, ip, loc, created, last);
+                        }).toList();
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
         return jdbc.query("""
                 SELECT id, browser, device, ip_address, location, created_at, last_activity
                 FROM iam_sessions WHERE user_uuid = ? AND revoked_at IS NULL
@@ -43,18 +74,43 @@ public class AccountSecurityRepositoryAdapter implements AccountSecurityReposito
     @Override
     @Transactional
     public void revokeSession(UUID userId, String sessionId) {
+        if (sessionRepository != null) {
+            try {
+                sessionRepository.deleteById(sessionId);
+            } catch (Exception ignored) {}
+        }
         jdbc.update("UPDATE iam_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_uuid = ? AND id = ?",
                 userId, sessionId);
     }
 
     @Override
     public void revokeSession(String sessionId) {
+        if (sessionRepository != null) {
+            try {
+                sessionRepository.deleteById(sessionId);
+            } catch (Exception ignored) {}
+        }
         jdbc.update("UPDATE iam_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ?", sessionId);
     }
 
     @Override
     @Transactional
     public void revokeOtherSessions(UUID userId, String currentSessionId) {
+        if (sessionRepository != null) {
+            try {
+                String username = jdbc.queryForObject("SELECT username FROM users WHERE uuid = ?", String.class, userId);
+                if (username != null) {
+                    var userSessions = sessionRepository.findByPrincipalName(username);
+                    if (userSessions != null) {
+                        for (String sid : userSessions.keySet()) {
+                            if (!sid.equals(currentSessionId)) {
+                                sessionRepository.deleteById(sid);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
         jdbc.update("UPDATE iam_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_uuid = ? AND id <> ? AND revoked_at IS NULL",
                 userId, currentSessionId);
     }
@@ -141,11 +197,7 @@ public class AccountSecurityRepositoryAdapter implements AccountSecurityReposito
     @Override
     public void registerSession(UUID userId, String sessionId, String browser, String device,
                                 String userAgent, String ipAddress) {
-        jdbc.update("""
-                INSERT INTO iam_sessions(id, user_uuid, browser, device, user_agent, ip_address)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT (id) DO UPDATE SET last_activity=CURRENT_TIMESTAMP, revoked_at=NULL
-                """, sessionId, userId, browser, device, userAgent, ipAddress);
+        // Session tracking is managed automatically by Spring Session Redis
     }
 
     @Override

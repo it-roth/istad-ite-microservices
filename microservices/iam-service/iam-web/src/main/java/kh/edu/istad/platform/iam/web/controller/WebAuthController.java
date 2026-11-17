@@ -26,20 +26,72 @@ public class WebAuthController {
             @RequestParam(name = "error", required = false) String error,
             @RequestParam(name = "logout", required = false) String logout,
             @RequestParam(name = "registered", required = false) String registered,
+            jakarta.servlet.http.HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response,
+            org.springframework.security.core.Authentication authentication,
             java.util.Locale locale,
             Model model
     ) {
         model.addAttribute("currentLang", locale != null ? locale.getLanguage() : "en");
+
+        if (logout != null) {
+            new org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler()
+                    .logout(request, response, authentication);
+            jakarta.servlet.http.HttpSession session = request.getSession(false);
+            if (session != null) {
+                try {
+                    session.invalidate();
+                } catch (Exception ignored) {}
+            }
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+            jakarta.servlet.http.Cookie jsessionCookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
+            jsessionCookie.setPath("/");
+            jsessionCookie.setMaxAge(0);
+            response.addCookie(jsessionCookie);
+            jakarta.servlet.http.Cookie rmCookie = new jakarta.servlet.http.Cookie("remember-me", "");
+            rmCookie.setPath("/");
+            rmCookie.setMaxAge(0);
+            response.addCookie(rmCookie);
+
+            model.addAttribute("logout", true);
+        } else if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+            return "redirect:/account";
+        }
+
         if (error != null) {
             model.addAttribute("error", true);
-        }
-        if (logout != null) {
-            model.addAttribute("logout", true);
         }
         if (registered != null) {
             model.addAttribute("registered", true);
         }
         return "login";
+    }
+
+    @GetMapping("/logout")
+    public String logout(
+            jakarta.servlet.http.HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response,
+            org.springframework.security.core.Authentication authentication
+    ) {
+        new org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler()
+                .logout(request, response, authentication);
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            try {
+                session.invalidate();
+            } catch (Exception ignored) {}
+        }
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        jakarta.servlet.http.Cookie jsessionCookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
+        jsessionCookie.setPath("/");
+        jsessionCookie.setMaxAge(0);
+        response.addCookie(jsessionCookie);
+        jakarta.servlet.http.Cookie rmCookie = new jakarta.servlet.http.Cookie("remember-me", "");
+        rmCookie.setPath("/");
+        rmCookie.setMaxAge(0);
+        response.addCookie(rmCookie);
+        return "redirect:/login?logout";
     }
 
     @GetMapping("/login/2fa")

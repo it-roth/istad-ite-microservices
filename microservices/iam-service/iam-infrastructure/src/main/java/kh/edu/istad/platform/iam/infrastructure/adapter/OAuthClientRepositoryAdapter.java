@@ -109,7 +109,9 @@ public class OAuthClientRepositoryAdapter implements OAuthClientRepository, kh.e
                 ? command.refreshTokenTimeToLiveMinutes() : 60;
 
         RegisteredClient.Builder builder = RegisteredClient.withId(java.util.UUID.randomUUID().toString())
-                .clientId(command.clientId()).clientName(command.clientName())
+                .clientId(command.clientId())
+                .clientName(command.clientName())
+                .clientIdIssuedAt(java.time.Instant.now())
                 .clientSettings(org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
                         .requireAuthorizationConsent(requireConsent).requireProofKey(true).build())
                 .tokenSettings(org.springframework.security.oauth2.server.authorization.settings.TokenSettings.builder()
@@ -140,6 +142,86 @@ public class OAuthClientRepositoryAdapter implements OAuthClientRepository, kh.e
 
     @Override
     @Transactional
+    public kh.edu.istad.platform.iam.domain.dto.OAuthClientAdminResult update(
+            String id,
+            kh.edu.istad.platform.iam.domain.dto.CreateOAuthClientCommand command) {
+        RegisteredClient existing = registeredClientRepository.findById(id);
+        if (existing == null) {
+            existing = registeredClientRepository.findByClientId(id);
+        }
+        if (existing == null) {
+            throw new IllegalArgumentException("Client not found with id: " + id);
+        }
+
+        boolean requireConsent = Boolean.TRUE.equals(command.requireAuthorizationConsent());
+        long accessMinutes = (command.accessTokenTimeToLiveMinutes() != null && command.accessTokenTimeToLiveMinutes() > 0)
+                ? command.accessTokenTimeToLiveMinutes() : 5;
+        long refreshMinutes = (command.refreshTokenTimeToLiveMinutes() != null && command.refreshTokenTimeToLiveMinutes() > 0)
+                ? command.refreshTokenTimeToLiveMinutes() : 60;
+
+        RegisteredClient.Builder builder = RegisteredClient.from(existing)
+                .clientName(command.clientName() != null ? command.clientName() : existing.getClientName())
+                .clientSettings(org.springframework.security.oauth2.server.authorization.settings.ClientSettings.builder()
+                        .requireAuthorizationConsent(requireConsent).requireProofKey(true).build())
+                .tokenSettings(org.springframework.security.oauth2.server.authorization.settings.TokenSettings.builder()
+                        .accessTokenTimeToLive(java.time.Duration.ofMinutes(accessMinutes))
+                        .refreshTokenTimeToLive(java.time.Duration.ofMinutes(refreshMinutes))
+                        .build());
+
+        if (command.clientId() != null && !command.clientId().isBlank()) {
+            builder.clientId(command.clientId());
+        }
+
+        if (command.authenticationMethods() != null && !command.authenticationMethods().isEmpty()) {
+            builder.clientAuthenticationMethods(methods -> {
+                methods.clear();
+                command.authenticationMethods().forEach(m -> methods.add(new org.springframework.security.oauth2.core.ClientAuthenticationMethod(m)));
+            });
+        }
+
+        if (command.grantTypes() != null && !command.grantTypes().isEmpty()) {
+            builder.authorizationGrantTypes(grants -> {
+                grants.clear();
+                command.grantTypes().forEach(g -> grants.add(new org.springframework.security.oauth2.core.AuthorizationGrantType(g)));
+            });
+        }
+
+        if (command.scopes() != null) {
+            builder.scopes(scopes -> {
+                scopes.clear();
+                scopes.addAll(command.scopes());
+            });
+        }
+
+        if (command.redirectUris() != null) {
+            builder.redirectUris(uris -> {
+                uris.clear();
+                uris.addAll(command.redirectUris());
+            });
+        }
+
+        if (command.postLogoutRedirectUris() != null) {
+            builder.postLogoutRedirectUris(uris -> {
+                uris.clear();
+                uris.addAll(command.postLogoutRedirectUris());
+            });
+        }
+
+        if (command.clientSecret() != null && !command.clientSecret().isBlank()) {
+            String secret = command.clientSecret();
+            if (!secret.startsWith("$2a$") && !secret.startsWith("$2b$") && !secret.startsWith("{noop}")) {
+                secret = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(secret);
+            }
+            builder.clientSecret(secret);
+        }
+
+        RegisteredClient updated = builder.build();
+        registeredClientRepository.save(updated);
+        return toAdminResult(updated);
+    }
+
+    @Override
+    @Transactional
     public void delete(String id) {
         jdbcTemplate.update("DELETE FROM oauth2_authorization_consent WHERE registered_client_id = ?", id);
         jdbcTemplate.update("DELETE FROM oauth2_authorization WHERE registered_client_id = ?", id);
@@ -147,9 +229,26 @@ public class OAuthClientRepositoryAdapter implements OAuthClientRepository, kh.e
     }
 
     private kh.edu.istad.platform.iam.domain.dto.OAuthClientAdminResult toAdminResult(RegisteredClient c) {
-        return new kh.edu.istad.platform.iam.domain.dto.OAuthClientAdminResult(c.getId(), c.getClientId(),
-                c.getClientName(), c.getAuthorizationGrantTypes().stream().map(org.springframework.security.oauth2.core.AuthorizationGrantType::getValue).collect(java.util.stream.Collectors.toUnmodifiableSet()),
+        Boolean requireConsent = c.getClientSettings() != null ? c.getClientSettings().isRequireAuthorizationConsent() : null;
+        Long accessMinutes = (c.getTokenSettings() != null && c.getTokenSettings().getAccessTokenTimeToLive() != null)
+                ? c.getTokenSettings().getAccessTokenTimeToLive().toMinutes() : null;
+        Long refreshMinutes = (c.getTokenSettings() != null && c.getTokenSettings().getRefreshTokenTimeToLive() != null)
+                ? c.getTokenSettings().getRefreshTokenTimeToLive().toMinutes() : null;
+        Set<String> postLogout = c.getPostLogoutRedirectUris() != null ? Set.copyOf(c.getPostLogoutRedirectUris()) : Set.of();
+
+        return new kh.edu.istad.platform.iam.domain.dto.OAuthClientAdminResult(
+                c.getId(),
+                c.getClientId(),
+                c.getClientName(),
+                c.getAuthorizationGrantTypes().stream().map(org.springframework.security.oauth2.core.AuthorizationGrantType::getValue).collect(java.util.stream.Collectors.toUnmodifiableSet()),
                 c.getClientAuthenticationMethods().stream().map(org.springframework.security.oauth2.core.ClientAuthenticationMethod::getValue).collect(java.util.stream.Collectors.toUnmodifiableSet()),
-                Set.copyOf(c.getScopes()), Set.copyOf(c.getRedirectUris()), c.getClientIdIssuedAt());
+                Set.copyOf(c.getScopes()),
+                Set.copyOf(c.getRedirectUris()),
+                postLogout,
+                requireConsent,
+                accessMinutes,
+                refreshMinutes,
+                c.getClientIdIssuedAt()
+        );
     }
 }
