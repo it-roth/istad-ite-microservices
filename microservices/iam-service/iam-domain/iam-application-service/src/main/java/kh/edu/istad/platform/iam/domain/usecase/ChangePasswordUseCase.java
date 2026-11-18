@@ -6,6 +6,7 @@ import kh.edu.istad.platform.iam.domain.exception.IamDomainException;
 import kh.edu.istad.platform.iam.domain.port.out.CurrentActorProvider;
 import kh.edu.istad.platform.iam.domain.port.out.PasswordHasher;
 import kh.edu.istad.platform.iam.domain.port.out.UserRepository;
+import kh.edu.istad.platform.iam.domain.service.PasswordPolicyValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,9 +21,11 @@ public class ChangePasswordUseCase {
     private final UserRepository userRepository;
     private final PasswordHasher passwordHasher;
     private final CurrentActorProvider currentActorProvider;
+    private final PasswordPolicyValidator passwordPolicyValidator;
 
     public void execute(ChangePasswordCommand command) {
         log.info("Changing password for user UUID: {}", command.userUuid());
+        passwordPolicyValidator.validate(command.newPassword());
         User user = userRepository.findByUuid(command.userUuid())
                 .orElseThrow(() -> new IamDomainException("User not found: " + command.userUuid()));
 

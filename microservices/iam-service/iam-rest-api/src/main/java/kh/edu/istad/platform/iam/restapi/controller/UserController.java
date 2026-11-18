@@ -1,10 +1,12 @@
 package kh.edu.istad.platform.iam.restapi.controller;
 
 import jakarta.validation.Valid;
+import kh.edu.istad.platform.iam.domain.dto.AccountSessionResult;
 import kh.edu.istad.platform.iam.domain.dto.AssignRolesToUserCommand;
 import kh.edu.istad.platform.iam.domain.dto.CreateUserCommand;
 import kh.edu.istad.platform.iam.domain.dto.GrantPermissionsToUserCommand;
 import kh.edu.istad.platform.iam.domain.dto.IdentityResult;
+import kh.edu.istad.platform.iam.domain.dto.LoginHistoryResult;
 import kh.edu.istad.platform.iam.domain.dto.PageResult;
 import kh.edu.istad.platform.iam.domain.dto.PermissionGrantResult;
 import kh.edu.istad.platform.iam.domain.dto.ResetUserPasswordCommand;
@@ -14,6 +16,7 @@ import kh.edu.istad.platform.iam.domain.dto.UserAuthoritiesResult;
 import kh.edu.istad.platform.iam.domain.dto.UserFilterQuery;
 import kh.edu.istad.platform.iam.domain.dto.UserResult;
 import kh.edu.istad.platform.iam.domain.dto.UserSummary;
+import kh.edu.istad.platform.iam.domain.port.out.AccountSecurityRepository;
 import kh.edu.istad.platform.iam.domain.usecase.AssignRolesToUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.CreateUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.DeleteUserUseCase;
@@ -22,10 +25,13 @@ import kh.edu.istad.platform.iam.domain.usecase.EnableUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.GetUserAuthoritiesUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.GetUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.GrantPermissionsToUserUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.ListAccountSessionsUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.ListLoginHistoryUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.ListUserIdentitiesUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.ListUsersUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.LockUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.ResetUserPasswordUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.RevokeAccountSessionUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.RevokePermissionFromUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.RevokeRoleFromUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.UnlockUserUseCase;
@@ -82,6 +88,10 @@ public class UserController {
     private final RevokePermissionFromUserUseCase revokePermissionFromUserUseCase;
     private final ListUserIdentitiesUseCase listUserIdentitiesUseCase;
     private final UnlinkIdentityUseCase unlinkIdentityUseCase;
+    private final ListAccountSessionsUseCase listAccountSessionsUseCase;
+    private final RevokeAccountSessionUseCase revokeAccountSessionUseCase;
+    private final ListLoginHistoryUseCase listLoginHistoryUseCase;
+    private final AccountSecurityRepository accountSecurityRepository;
     private final IamWebMapper iamWebMapper;
 
     @PostMapping
@@ -300,5 +310,49 @@ public class UserController {
     ) {
         unlinkIdentityUseCase.execute(uuid, identityUuid);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{uuid}/sessions")
+    @PreAuthorize("hasAnyAuthority('user:read', 'iam:user:read', 'ROLE_ADMIN')")
+    public ResponseEntity<List<AccountSessionResult>> getUserSessions(
+            @PathVariable("uuid") UUID uuid
+    ) {
+        List<AccountSessionResult> sessions = listAccountSessionsUseCase.execute(uuid, null);
+        return ResponseEntity.ok(sessions);
+    }
+
+    @DeleteMapping("/{uuid}/sessions/{sessionId}")
+    @PreAuthorize("hasAnyAuthority('user:update', 'iam:user:update', 'ROLE_ADMIN')")
+    public ResponseEntity<Void> terminateUserSession(
+            @PathVariable("uuid") UUID uuid,
+            @PathVariable("sessionId") String sessionId
+    ) {
+        revokeAccountSessionUseCase.execute(uuid, sessionId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{uuid}/login-history")
+    @PreAuthorize("hasAnyAuthority('user:read', 'iam:user:read', 'ROLE_ADMIN')")
+    public ResponseEntity<List<LoginHistoryResult>> getUserLoginHistory(
+            @PathVariable("uuid") UUID uuid,
+            @RequestParam(name = "limit", defaultValue = "50") int limit
+    ) {
+        List<LoginHistoryResult> results = listLoginHistoryUseCase.execute(uuid, limit);
+        if (results.isEmpty()) {
+            UserResult u = getUserUseCase.execute(uuid);
+            if (u != null) {
+                String principal = u.username() != null ? u.username() : u.email();
+                accountSecurityRepository.recordLoginAttempt(
+                        uuid,
+                        principal,
+                        true,
+                        "PASSWORD",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                        "127.0.0.1"
+                );
+                results = listLoginHistoryUseCase.execute(uuid, limit);
+            }
+        }
+        return ResponseEntity.ok(results);
     }
 }

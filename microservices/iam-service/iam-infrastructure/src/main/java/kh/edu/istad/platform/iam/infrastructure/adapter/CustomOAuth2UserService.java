@@ -58,8 +58,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             HttpSession session = request.getSession(false);
             if (session != null) {
                 linkingUser = (String) session.getAttribute("iam.link-user");
-                session.removeAttribute("iam.link-user");
-                session.setAttribute("iam.link-success", command.provider());
+                if (linkingUser != null && !linkingUser.isBlank()) {
+                    session.removeAttribute("iam.link-user");
+                    session.setAttribute("iam.link-success", command.provider().name());
+                }
             }
         }
         try {
@@ -73,21 +75,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 return linked;
             }
 
-            Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
-            if (currentAuthentication != null
-                    && currentAuthentication.isAuthenticated()
-                    && !(currentAuthentication instanceof AnonymousAuthenticationToken)) {
-                AuthUserResult linked = linkFederatedIdentityUseCase.execute(currentAuthentication.getName(), command);
-                try {
-                    accountSecurityRepository.recordActivity(linked.uuid(), "IDENTITY_LINKED",
-                            "Connected " + command.provider() + " single sign-on authentication",
-                            currentAuthentication.getName(), "127.0.0.1");
-                } catch (Exception ignored) {}
-                return linked;
-            }
             return findOrProvisionFederatedUserUseCase.execute(command);
-        } catch (kh.edu.istad.platform.iam.domain.exception.IamDomainException ex) {
-            log.warn("OAuth2 link error: {}", ex.getMessage());
+        } catch (Exception ex) {
+            log.warn("OAuth2 error: {}", ex.getMessage(), ex);
             throw new OAuth2AuthenticationException(new org.springframework.security.oauth2.core.OAuth2Error(
                     "link_failed", ex.getMessage(), null
             ), ex);

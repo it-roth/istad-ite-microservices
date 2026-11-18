@@ -31,9 +31,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
+import {
   Shield, Key, Plus, Trash2, RefreshCw, CheckCircle2,
-  AlertCircle, Search, MoreHorizontal, SlidersHorizontal, ChevronDown
+  AlertCircle, Search, MoreHorizontal, SlidersHorizontal, ChevronDown, Pencil
 } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
 
 export default function AdminCatalogPage({ type }) {
   const navigate = useNavigate()
@@ -49,6 +60,7 @@ export default function AdminCatalogPage({ type }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [typeFilter, setTypeFilter] = useState('ALL')
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState(null)
 
   // Pagination
   const [rowsPerPage, setRowsPerPage] = useState(5)
@@ -65,6 +77,47 @@ export default function AdminCatalogPage({ type }) {
   const [allPerms, setAllPerms] = useState([])
   const [assignedPerms, setAssignedPerms] = useState([])
   const [loadingPerms, setLoadingPerms] = useState(false)
+
+  // Edit role modal state
+  const [editRoleOpen, setEditRoleOpen] = useState(false)
+  const [editingRole, setEditingRole] = useState(null)
+  const [editRoleForm, setEditRoleForm] = useState({ name: '', description: '' })
+  const [savingEditRole, setSavingEditRole] = useState(false)
+  const [editRoleError, setEditRoleError] = useState('')
+
+  function openEditRole(role) {
+    setEditingRole(role)
+    setEditRoleForm({
+      name: role.name || '',
+      description: role.description || ''
+    })
+    setEditRoleError('')
+    setEditRoleOpen(true)
+  }
+
+  async function handleSaveEditRole(e) {
+    e.preventDefault()
+    if (!editingRole) return
+    if (!editRoleForm.name.trim()) {
+      setEditRoleError('Role name is required')
+      return
+    }
+    setSavingEditRole(true)
+    setEditRoleError('')
+    try {
+      await rolesApi.update(editingRole.uuid, {
+        name: editRoleForm.name.trim().toUpperCase(),
+        description: editRoleForm.description?.trim() || ''
+      })
+      setEditRoleOpen(false)
+      setActionMsg(`Role updated successfully.`)
+      load()
+    } catch (err) {
+      setEditRoleError(err.message || 'Failed to update role')
+    } finally {
+      setSavingEditRole(false)
+    }
+  }
 
   function load() {
     setLoading(true)
@@ -92,23 +145,33 @@ export default function AdminCatalogPage({ type }) {
         setPermForm({ resource: '', action: '', description: '' })
         setSuccessMsg(`Permission ${permForm.resource}:${permForm.action} created successfully.`)
       }
+      setTimeout(() => setSuccessMsg(''), 4000)
       setCreateOpen(false)
       load()
     } catch (err) {
-      alert(err.message)
+      setError(err.message || 'Failed to create')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
-  async function handleRemove(item) {
-    const label = item.name || `${item.resource}:${item.action}`
-    if (!window.confirm(`Are you sure you want to permanently delete "${label}"?`)) return
+  function handleRemove(item) {
+    setDeleteConfirmItem(item)
+  }
+
+  async function confirmRemove() {
+    if (!deleteConfirmItem) return
+    const label = deleteConfirmItem.name || `${deleteConfirmItem.resource}:${deleteConfirmItem.action}`
     try {
-      if (isRoles) await rolesApi.delete(item.uuid)
-      else await permissionsApi.delete(item.uuid)
+      if (isRoles) await rolesApi.delete(deleteConfirmItem.uuid)
+      else await permissionsApi.delete(deleteConfirmItem.uuid)
       setSuccessMsg(`"${label}" deleted.`)
+      setTimeout(() => setSuccessMsg(''), 4000)
+      setDeleteConfirmItem(null)
       load()
     } catch (err) {
-      setError(err.message)
+      setDeleteConfirmItem(null)
+      setError(err.message || 'Failed to delete')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -243,12 +306,12 @@ export default function AdminCatalogPage({ type }) {
 
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[130px] h-9 text-xs">
-                <SelectValue placeholder="All types" />
+                <SelectValue placeholder={tr('common.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All types</SelectItem>
-                <SelectItem value="BUILTIN">Built-in</SelectItem>
-                <SelectItem value="CUSTOM">Custom</SelectItem>
+                <SelectItem value="ALL">{tr('common.allTypes')}</SelectItem>
+                <SelectItem value="BUILTIN">{tr('common.builtIn')}</SelectItem>
+                <SelectItem value="CUSTOM">{tr('common.custom')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -324,7 +387,7 @@ export default function AdminCatalogPage({ type }) {
                         {/* Type Column */}
                         <td className="py-3.5 px-4">
                           <Badge variant="outline" className="text-[10px] font-normal border-slate-200 dark:border-slate-800 text-muted-foreground bg-muted/30 px-2 py-0.5">
-                            {isBuiltin ? 'Built-in' : 'Custom'}
+                            {isBuiltin ? tr('common.builtIn') : tr('common.custom')}
                           </Badge>
                         </td>
 
@@ -345,12 +408,15 @@ export default function AdminCatalogPage({ type }) {
                                   <MoreHorizontal size={14} />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-44 text-xs">
+                              <DropdownMenuContent align="end" className="w-48 text-xs">
                                 <DropdownMenuItem onClick={() => navigate(`/admin/roles/${item.uuid}`)} className="cursor-pointer text-xs">
-                                  <SlidersHorizontal size={13} className="mr-2" /> View permissions
+                                  <SlidersHorizontal size={13} className="mr-2 text-muted-foreground" /> {tr('roles.viewPermissions')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openRolePermissions(item)} className="cursor-pointer text-xs">
                                   <Shield size={13} className="mr-2 text-blue-500" /> {tr('roles.managePermissions')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditRole(item)} className="cursor-pointer text-xs font-medium">
+                                  <Pencil size={13} className="mr-2 text-amber-500" /> {tr('roles.editRole')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => handleToggle(item)} className="cursor-pointer text-xs">
@@ -526,6 +592,101 @@ export default function AdminCatalogPage({ type }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={editRoleOpen} onOpenChange={setEditRoleOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <Pencil size={16} className="text-amber-500" />
+              {tr('roles.editRole')} {editingRole?.name ? `(${editingRole.name})` : ''}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Update the name or description for this role.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editRoleError && (
+            <div className="p-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
+              <AlertCircle size={14} className="shrink-0" />
+              <span>{editRoleError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSaveEditRole} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label htmlFor="edit-role-name" className="text-xs font-medium text-foreground">
+                {tr('roles.roleName')}
+              </label>
+              <Input
+                id="edit-role-name"
+                value={editRoleForm.name}
+                onChange={e => setEditRoleForm({ ...editRoleForm, name: e.target.value })}
+                placeholder="e.g. MODERATOR, STAFF, USER"
+                className="h-8 text-xs font-mono uppercase"
+                disabled={editingRole?.name === 'ADMIN' || editingRole?.name === 'SUPERADMIN'}
+              />
+              {(editingRole?.name === 'ADMIN' || editingRole?.name === 'SUPERADMIN') && (
+                <p className="text-[11px] text-muted-foreground">
+                  System core role identifier is protected and cannot be renamed.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="edit-role-desc" className="text-xs font-medium text-foreground">
+                {tr('roles.roleDesc')}
+              </label>
+              <Textarea
+                id="edit-role-desc"
+                value={editRoleForm.description}
+                onChange={e => setEditRoleForm({ ...editRoleForm, description: e.target.value })}
+                placeholder="Describe what people with this role can do..."
+                rows={3}
+                className="text-xs resize-none"
+              />
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditRoleOpen(false)} disabled={savingEditRole}>
+                {tr('common.cancel')}
+              </Button>
+              <Button type="submit" size="sm" disabled={savingEditRole} className="cursor-pointer">
+                {savingEditRole ? (
+                  <>
+                    <RefreshCw size={13} className="mr-1.5 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  tr('common.save')
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Item Confirmation Dialog */}
+      <AlertDialog open={Boolean(deleteConfirmItem)} onOpenChange={open => !open && setDeleteConfirmItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isRoles ? 'Delete Role?' : 'Delete Permission?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {`Are you sure you want to permanently delete "${deleteConfirmItem?.name || `${deleteConfirmItem?.resource}:${deleteConfirmItem?.action}`}"? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tr('common.cancel') || 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={confirmRemove}
+            >
+              {isRoles ? 'Delete Role' : 'Delete Permission'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   )

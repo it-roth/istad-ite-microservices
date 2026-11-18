@@ -141,6 +141,10 @@ export default function ProfilePage() {
         }
       } catch (err) {
         console.error('Failed to load profile:', err)
+        if (err?.status === 401 || err?.status === 403) {
+          window.location.href = '/login'
+          return
+        }
       } finally {
         if (mounted) setInitialLoaded(true)
       }
@@ -519,43 +523,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* User Identity Summary Banner (100% Dynamic from API) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-1">
-          <div className="flex items-center gap-4">
-            {/* <UserAvatar
-              user={{ ...profileData, ...form }}
-              src={form.pictureUrl}
-              className="h-14 w-14 text-lg shrink-0"
-              textClassName="font-bold"
-            /> */}
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-foreground">
-                  {form.givenName || form.familyName ? `${form.givenName} ${form.familyName}`.trim() : currentUsername}
-                </span>
-                {roleName && (
-                  <Badge variant="secondary" className="text-[10px] uppercase font-mono">
-                    {roleName}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                <span>@{currentUsername}</span>
-                {currentEmail && (
-                  <>
-                    <span>&bull;</span>
-                    <span>{currentEmail}</span>
-                  </>
-                )}
-                {emailVerified && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium ml-1">
-                    <CheckCircle2 size={11} /> {tr('profile.verified')}
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Section 1: Profile picture management */}
@@ -674,8 +642,8 @@ export default function ProfilePage() {
                     value={form.username}
                     onChange={handleChange}
                     autoComplete="off"
+                    placeholder="Enter your unique handle"
                     className={`mt-1 text-xs h-9 ${fieldErrors.username ? 'border-rose-500 focus-visible:ring-rose-500' : ''}`}
-                    required
                   />
                   {fieldErrors.username ? (
                     <p className="text-[11px] text-rose-500 font-medium mt-1">{fieldErrors.username}</p>

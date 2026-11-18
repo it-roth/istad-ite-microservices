@@ -56,7 +56,8 @@ public final class UserResultMapper {
                 user.getGivenName(),
                 user.getFamilyName(),
                 user.getEnabled(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getPictureUrl()
         );
     }
 }

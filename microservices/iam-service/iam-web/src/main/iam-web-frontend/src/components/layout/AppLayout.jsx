@@ -22,33 +22,33 @@ import {
   PanelLeft, Search, Moon, Sun, Laptop, Globe, Check, Languages
 } from 'lucide-react'
 
-const routeTitles = {
-  '/account': { group: 'My account', title: 'Overview' },
-  '/dashboard': { group: 'My account', title: 'Overview' },
-  '/account/profile': { group: 'My account', title: 'Profile' },
-  '/account/security': { group: 'My account', title: 'Password & security' },
-  '/account/linked': { group: 'My account', title: 'Linked accounts' },
-  '/account/linked-accounts': { group: 'My account', title: 'Linked accounts' },
-  '/account/sessions': { group: 'My account', title: 'Active sessions' },
-  '/account/session-mgmt': { group: 'My account', title: 'Session management' },
-  '/account/history': { group: 'My account', title: 'Login history' },
-  '/account/activity': { group: 'My account', title: 'Account activity' },
-  '/account/deactivate': { group: 'My account', title: 'Account deactivation' },
-  '/admin': { group: 'Administration', title: 'Admin overview' },
-  '/admin/users': { group: 'Administration', title: 'Users' },
-  '/admin/roles': { group: 'Administration', title: 'Roles' },
-  '/admin/permissions': { group: 'Administration', title: 'Permissions' },
-  '/admin/applications': { group: 'Administration', title: 'Applications' },
-  '/admin/applications/new': { group: 'Administration', title: 'Applications', sub: 'New' },
-  '/admin/clients': { group: 'Administration', title: 'Applications' },
-  '/admin/clients/new': { group: 'Administration', title: 'Applications', sub: 'New' },
-  '/admin/audit': { group: 'Administration', title: 'Audit log' },
-  '/admin/configuration': { group: 'Administration', title: 'System configuration' },
-  '/admin/security-config': { group: 'Administration', title: 'System configuration' },
+const routeKeys = {
+  '/account': { groupKey: 'nav.myAccount', titleKey: 'nav.overview' },
+  '/dashboard': { groupKey: 'nav.myAccount', titleKey: 'nav.overview' },
+  '/account/profile': { groupKey: 'nav.myAccount', titleKey: 'nav.profile' },
+  '/account/security': { groupKey: 'nav.myAccount', titleKey: 'nav.security' },
+  '/account/linked': { groupKey: 'nav.myAccount', titleKey: 'nav.linkedAccounts' },
+  '/account/linked-accounts': { groupKey: 'nav.myAccount', titleKey: 'nav.linkedAccounts' },
+  '/account/sessions': { groupKey: 'nav.myAccount', titleKey: 'nav.sessions' },
+  '/account/session-mgmt': { groupKey: 'nav.myAccount', titleKey: 'nav.sessionMgmt' },
+  '/account/history': { groupKey: 'nav.myAccount', titleKey: 'nav.loginHistory' },
+  '/account/activity': { groupKey: 'nav.myAccount', titleKey: 'nav.activity' },
+  '/account/deactivate': { groupKey: 'nav.myAccount', titleKey: 'nav.deactivate' },
+  '/admin': { groupKey: 'nav.admin', titleKey: 'nav.adminOverview' },
+  '/admin/users': { groupKey: 'nav.admin', titleKey: 'nav.users' },
+  '/admin/roles': { groupKey: 'nav.admin', titleKey: 'nav.roles' },
+  '/admin/permissions': { groupKey: 'nav.admin', titleKey: 'nav.permissions' },
+  '/admin/applications': { groupKey: 'nav.admin', titleKey: 'nav.applications' },
+  '/admin/applications/new': { groupKey: 'nav.admin', titleKey: 'nav.applications', sub: 'New' },
+  '/admin/clients': { groupKey: 'nav.admin', titleKey: 'nav.applications' },
+  '/admin/clients/new': { groupKey: 'nav.admin', titleKey: 'nav.applications', sub: 'New' },
+  '/admin/audit': { groupKey: 'nav.admin', titleKey: 'nav.auditLog' },
+  '/admin/configuration': { groupKey: 'nav.admin', titleKey: 'nav.configuration' },
+  '/admin/security-config': { groupKey: 'nav.admin', titleKey: 'nav.configuration' },
 }
 
 export default function AppLayout() {
-  const { setUser, user, lang, switchLang, breadcrumbSub, setBreadcrumbSub } = useApp()
+  const { setUser, user, lang, switchLang, breadcrumbSub, setBreadcrumbSub, tr } = useApp()
   const location = useLocation()
   const mainRef = useRef(null)
   const [loading, setLoading] = useState(true)
@@ -88,15 +88,12 @@ export default function AppLayout() {
   useEffect(() => {
     meApi.get()
       .then(data => { setUser(data); setLoading(false) })
-      .catch(() => {
-        // Fallback demo user
-        setUser({
-          username: 'admin',
-          givenName: 'System',
-          familyName: 'Administrator',
-          email: 'admin@istad.edu.kh',
-          role: 'ROLE_ADMIN'
-        })
+      .catch((err) => {
+        console.error('Failed to load authenticated user profile:', err)
+        if (err?.status === 401 || err?.status === 403) {
+          window.location.href = '/login'
+          return
+        }
         setLoading(false)
       })
   }, [setUser])
@@ -109,17 +106,23 @@ export default function AppLayout() {
     )
   }
 
-  let breadcrumb = routeTitles[location.pathname]
+  const matchedRoute = routeKeys[location.pathname]
+  let breadcrumb = matchedRoute ? {
+    group: tr(matchedRoute.groupKey),
+    title: tr(matchedRoute.titleKey),
+    sub: matchedRoute.sub
+  } : null
+
   if (!breadcrumb) {
     if (location.pathname.startsWith('/admin/users/')) {
       const parts = location.pathname.split('/')
-      breadcrumb = { group: 'Administration', title: 'Users', sub: breadcrumbSub || parts[3] || 'Details' }
+      breadcrumb = { group: tr('nav.admin'), title: tr('nav.users'), sub: breadcrumbSub || parts[3] || 'Details' }
     } else if (location.pathname.startsWith('/admin/roles/')) {
       const parts = location.pathname.split('/')
-      breadcrumb = { group: 'Administration', title: 'Roles', sub: breadcrumbSub || parts[3] || 'Details' }
+      breadcrumb = { group: tr('nav.admin'), title: tr('nav.roles'), sub: breadcrumbSub || parts[3] || 'Details' }
     } else {
       breadcrumb = {
-        group: location.pathname.startsWith('/admin') ? 'Administration' : 'My account',
+        group: location.pathname.startsWith('/admin') ? tr('nav.admin') : tr('nav.myAccount'),
         title: location.pathname.split('/').pop().replace('-', ' ')
       }
     }

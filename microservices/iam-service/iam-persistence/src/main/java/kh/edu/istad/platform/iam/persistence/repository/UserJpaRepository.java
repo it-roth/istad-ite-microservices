@@ -23,10 +23,9 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
     Optional<UserJpaEntity> findByEmailAndIsDeletedFalse(String email);
 
     @Query("""
-            SELECT DISTINCT u FROM UserJpaEntity u
-            LEFT JOIN IdentityJpaEntity fi ON fi.userId = u.id AND fi.isDeleted = false
+            SELECT u FROM UserJpaEntity u
             WHERE u.isDeleted = false
-              AND (u.username = :input OR LOWER(u.email) = LOWER(:input) OR LOWER(fi.email) = LOWER(:input))
+              AND (u.username = :input OR LOWER(u.email) = LOWER(:input))
             """)
     Optional<UserJpaEntity> findByUsernameOrEmail(@Param("input") String input);
 

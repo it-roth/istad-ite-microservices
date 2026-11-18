@@ -7,9 +7,11 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import kh.edu.istad.platform.iam.infrastructure.adapter.CustomOAuth2UserService;
 import kh.edu.istad.platform.iam.infrastructure.adapter.CustomOidcUserService;
+import kh.edu.istad.platform.iam.infrastructure.adapter.IamOAuth2User;
 import kh.edu.istad.platform.iam.infrastructure.adapter.IamUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -43,6 +45,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -68,7 +71,7 @@ public class SecurityConfig {
                 "istad-iam-remember-me-key-2026", iamUserDetailsService);
         rememberMeServices.setParameter("remember-me");
         rememberMeServices.setTokenValiditySeconds(86400 * 30); // 30 days persistent cookie
-        rememberMeServices.setAlwaysRemember(true); // Persist login so restarts keep user logged in
+        rememberMeServices.setAlwaysRemember(false);
         return rememberMeServices;
     }
 
@@ -111,6 +114,7 @@ public class SecurityConfig {
                                 "/login/telegram",
                                 "/login/telegram/callback",
                                 "/oauth2/**",
+                                "/.well-known/**",
                                 "/login/oauth2/**",
                                 "/",
                                 "/assets/**",
@@ -130,18 +134,31 @@ public class SecurityConfig {
                                         .userService(customOAuth2UserService)
                                         .oidcUserService(customOidcUserService))
                                 .successHandler((request, response, authentication) -> {
-                                    rememberMeServices().loginSuccess(request, response, authentication);
-                                    jakarta.servlet.http.HttpSession session = request.getSession(false);
-                                    if (session != null && session.getAttribute("iam.link-success") != null) {
-                                        String linkedProv = (String) session.getAttribute("iam.link-success");
-                                        session.removeAttribute("iam.link-success");
-                                        response.sendRedirect(
-                                                "/account/linked-accounts?linked=" + linkedProv.toLowerCase());
-                                        return;
+                                    try {
+                                        jakarta.servlet.http.HttpSession session = request.getSession(true);
+                                        if (session != null) {
+                                            if (authentication.getPrincipal() instanceof IamOAuth2User oauthUser) {
+                                                session.setAttribute("userUuid", oauthUser.getUserUuid().toString());
+                                            }
+                                            session.setAttribute("browser", "Chrome");
+                                            session.setAttribute("device", "Desktop");
+                                            session.setAttribute("location", "Phnom Penh, Cambodia");
+                                            if (session.getAttribute("iam.link-success") != null) {
+                                                String linkedProv = String.valueOf(session.getAttribute("iam.link-success"));
+                                                session.removeAttribute("iam.link-success");
+                                                response.sendRedirect(
+                                                        "/account/linked-accounts?linked=" + linkedProv.toLowerCase());
+                                                return;
+                                            }
+                                        }
+                                        response.sendRedirect("/account");
+                                    } catch (Exception ex) {
+                                        log.error("Error in oauth2 success handler: {}", ex.getMessage(), ex);
+                                        response.sendRedirect("/account");
                                     }
-                                    response.sendRedirect("/account");
                                 })
                                 .failureHandler((request, response, exception) -> {
+                                    log.error("OAuth2 login failed: {}", exception.getMessage(), exception);
                                     jakarta.servlet.http.HttpSession session = request.getSession(false);
                                     if (session != null && session.getAttribute("iam.link-user") != null) {
                                         session.removeAttribute("iam.link-user");
@@ -156,6 +173,27 @@ public class SecurityConfig {
                         .rememberMeServices(rememberMeServices()))
                 .formLogin(config -> config
                         .loginPage("/login")
+                        .failureHandler((request, response, exception) -> {
+                            try {
+                                rememberMeServices().loginFail(request, response);
+                            } catch (Exception ignored) {}
+                            jakarta.servlet.http.HttpSession session = request.getSession(false);
+                            if (session != null) {
+                                try {
+                                    session.invalidate();
+                                } catch (Exception ignored) {}
+                            }
+                            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+                            jakarta.servlet.http.Cookie rmCookie = new jakarta.servlet.http.Cookie("remember-me", "");
+                            rmCookie.setPath("/");
+                            rmCookie.setMaxAge(0);
+                            response.addCookie(rmCookie);
+                            jakarta.servlet.http.Cookie jsessionCookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
+                            jsessionCookie.setPath("/");
+                            jsessionCookie.setMaxAge(0);
+                            response.addCookie(jsessionCookie);
+                            response.sendRedirect("/login?error");
+                        })
                         .successHandler((request, response, authentication) -> {
                             rememberMeServices().loginSuccess(request, response, authentication);
                             String username = authentication.getName();
@@ -243,7 +281,11 @@ public class SecurityConfig {
                             String targetUrl = "/account";
                             if (savedRequest != null && savedRequest.getRedirectUrl() != null) {
                                 String savedUrl = savedRequest.getRedirectUrl();
-                                if (!savedUrl.contains("/login") && !savedUrl.contains("/assets/")) {
+                                String lower = savedUrl.toLowerCase();
+                                if (!lower.contains("/login") && !lower.contains("/assets/") && !lower.contains("/api/")
+                                        && !lower.contains(".well-known") && !lower.contains("devtools")
+                                        && !lower.endsWith(".json") && !lower.endsWith(".ico") && !lower.endsWith(".svg")
+                                        && (lower.contains("/account") || lower.contains("/admin") || lower.contains("/oauth2/authorize"))) {
                                     targetUrl = savedUrl;
                                 }
                             }

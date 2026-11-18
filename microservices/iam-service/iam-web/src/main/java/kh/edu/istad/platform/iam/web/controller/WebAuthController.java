@@ -35,33 +35,14 @@ public class WebAuthController {
         model.addAttribute("currentLang", locale != null ? locale.getLanguage() : "en");
 
         if (logout != null) {
-            new org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler()
-                    .logout(request, response, authentication);
-            jakarta.servlet.http.HttpSession session = request.getSession(false);
-            if (session != null) {
-                try {
-                    session.invalidate();
-                } catch (Exception ignored) {}
-            }
-            org.springframework.security.core.context.SecurityContextHolder.clearContext();
-            jakarta.servlet.http.Cookie jsessionCookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
-            jsessionCookie.setPath("/");
-            jsessionCookie.setMaxAge(0);
-            response.addCookie(jsessionCookie);
-            jakarta.servlet.http.Cookie rmCookie = new jakarta.servlet.http.Cookie("remember-me", "");
-            rmCookie.setPath("/");
-            rmCookie.setMaxAge(0);
-            response.addCookie(rmCookie);
-
             model.addAttribute("logout", true);
+        } else if (error != null) {
+            model.addAttribute("error", true);
         } else if (authentication != null && authentication.isAuthenticated()
                 && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
             return "redirect:/account";
         }
 
-        if (error != null) {
-            model.addAttribute("error", true);
-        }
         if (registered != null) {
             model.addAttribute("registered", true);
         }

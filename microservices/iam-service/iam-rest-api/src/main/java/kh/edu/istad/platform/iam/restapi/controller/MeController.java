@@ -11,6 +11,7 @@ import kh.edu.istad.platform.iam.domain.dto.OAuthClientResult;
 import kh.edu.istad.platform.iam.domain.dto.ResetUserPasswordCommand;
 import kh.edu.istad.platform.iam.domain.usecase.ChangePasswordUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.ResetUserPasswordUseCase;
+import kh.edu.istad.platform.iam.domain.usecase.DeleteUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.GetUserAuthoritiesUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.GetUserUseCase;
 import kh.edu.istad.platform.iam.domain.usecase.ListUserIdentitiesUseCase;
@@ -49,6 +50,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MeController {
 
+    private final DeleteUserUseCase deleteUserUseCase;
     private final GetUserUseCase getUserUseCase;
     private final UpdateUserProfileUseCase updateUserProfileUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
@@ -103,19 +105,41 @@ public class MeController {
     @PatchMapping
     public ResponseEntity<UserResponse> updateMe(
             @Valid @RequestBody UpdateUserProfileRequest request,
-            Authentication authentication
+            Authentication authentication,
+            jakarta.servlet.http.HttpServletRequest httpRequest
     ) {
         UUID userUuid = resolveCurrentUserUuid(authentication);
         UpdateUserProfileCommand command = iamWebMapper.toCommand(userUuid, request);
         UserResult userResult = updateUserProfileUseCase.execute(command);
         UserAuthoritiesResult authoritiesResult = getUserAuthoritiesUseCase.execute(userUuid);
 
+        // Synchronize SecurityContext and HTTP Session if username was updated
+        if (userResult.username() != null && !userResult.username().equals(authentication.getName())) {
+            org.springframework.security.authentication.UsernamePasswordAuthenticationToken newAuth =
+                    new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                            userResult.username(),
+                            authentication.getCredentials(),
+                            authentication.getAuthorities()
+                    );
+            org.springframework.security.core.context.SecurityContext context =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext();
+            context.setAuthentication(newAuth);
+
+            try {
+                jakarta.servlet.http.HttpSession session = httpRequest.getSession(false);
+                if (session != null) {
+                    session.setAttribute(
+                            "SPRING_SECURITY_CONTEXT",
+                            context
+                    );
+                }
+            } catch (Exception ignored) {}
+        }
+
         List<UserRoleSummaryResponse> roleSummaries = List.of();
         if (authoritiesResult.roles() != null) {
             roleSummaries = authoritiesResult.roles().stream()
-                    .map(r -> {
-                        return new UserRoleSummaryResponse(r.uuid(), r.name());
-                    })
+                    .map(r -> new UserRoleSummaryResponse(r.uuid(), r.name()))
                     .toList();
         }
 
@@ -269,6 +293,42 @@ public class MeController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/deactivate")
+    public ResponseEntity<Void> deactivateMe(
+            Authentication authentication,
+            jakarta.servlet.http.HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response
+    ) {
+        UUID userUuid = resolveCurrentUserUuid(authentication);
+        deleteUserUseCase.execute(userUuid);
+
+        try {
+            accountSecurityRepository.recordActivity(userUuid, "ACCOUNT_DEACTIVATED",
+                    "User self-deactivated account", authentication != null ? authentication.getName() : "self",
+                    request.getRemoteAddr());
+        } catch (Exception ignored) {}
+
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            try {
+                session.invalidate();
+            } catch (Exception ignored) {}
+        }
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
+        jakarta.servlet.http.Cookie jsessionCookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
+        jsessionCookie.setPath("/");
+        jsessionCookie.setMaxAge(0);
+        response.addCookie(jsessionCookie);
+
+        jakarta.servlet.http.Cookie rmCookie = new jakarta.servlet.http.Cookie("remember-me", "");
+        rmCookie.setPath("/");
+        rmCookie.setMaxAge(0);
+        response.addCookie(rmCookie);
+
+        return ResponseEntity.noContent().build();
+    }
+
     private UUID resolveCurrentUserUuid(
             Authentication authentication
     ) {
@@ -279,8 +339,15 @@ public class MeController {
         try {
             return UUID.fromString(name);
         } catch (IllegalArgumentException ex) {
-            AuthUserResult authUser = loadUserForAuthenticationUseCase.execute(name);
-            return authUser.uuid();
+            try {
+                AuthUserResult authUser = loadUserForAuthenticationUseCase.execute(name);
+                return authUser.uuid();
+            } catch (Exception ex2) {
+                return userRepository.findByUsername(name)
+                        .or(() -> userRepository.findByEmail(name))
+                        .map(u -> u.getId().value())
+                        .orElseThrow(() -> new AccessDeniedException("User not found: " + name));
+            }
         }
     }
 }

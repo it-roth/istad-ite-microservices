@@ -10,5 +10,18 @@ public record UserSummary(
         String givenName,
         String familyName,
         Boolean enabled,
-        LocalDateTime createdAt
-) {}
+        LocalDateTime createdAt,
+        String pictureUrl
+) {
+    public UserSummary(
+            UUID uuid,
+            String username,
+            String email,
+            String givenName,
+            String familyName,
+            Boolean enabled,
+            LocalDateTime createdAt
+    ) {
+        this(uuid, username, email, givenName, familyName, enabled, createdAt, null);
+    }
+}

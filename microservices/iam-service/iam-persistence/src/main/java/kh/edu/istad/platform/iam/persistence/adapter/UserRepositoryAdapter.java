@@ -104,7 +104,8 @@ public class UserRepositoryAdapter implements UserRepository {
                             e.getGivenName(),
                             e.getFamilyName(),
                             e.getEnabled(),
-                            e.getCreatedAt()
+                            e.getCreatedAt(),
+                            e.getPictureUrl()
                     );
                 })
                 .toList();

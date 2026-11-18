@@ -32,15 +32,26 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
+import {
   Search, Mail, UserPlus, ChevronDown,
   MoreHorizontal, Trash2, CheckCircle2, AlertCircle, RefreshCw,
   Monitor, Lock, Unlock, Shield, Users
 } from 'lucide-react'
 import KeyIcon from '@/components/icons/KeyIcon'
+import UserAvatar from '@/components/common/UserAvatar'
 
 export default function AdminUsersPage() {
   const navigate = useNavigate()
-  const { tr } = useApp()
+  const { tr, lang } = useApp()
   const [users, setUsers] = useState([])
   const [availableRoles, setAvailableRoles] = useState([])
   const [query, setQuery] = useState('')
@@ -56,11 +67,14 @@ export default function AdminUsersPage() {
 
   // Modals state
   const [createOpen, setCreateOpen] = useState(false)
+  const [createError, setCreateError] = useState('')
   const [pwdOpen, setPwdOpen] = useState(false)
+  const [pwdError, setPwdError] = useState('')
   const [roleOpen, setRoleOpen] = useState(false)
   const [permOpen, setPermOpen] = useState(false)
   const [sessionOpen, setSessionOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState(null)
 
   // Form states
   const [createForm, setCreateForm] = useState({
@@ -163,14 +177,16 @@ export default function AdminUsersPage() {
   // Create User
   async function handleCreateUser(e) {
     e.preventDefault()
+    setCreateError('')
     try {
       await usersApi.create(createForm)
       setCreateOpen(false)
       setCreateForm({ username: '', email: '', password: '', givenName: '', familyName: '' })
-      setActionMsg('User created successfully.')
+      setActionMsg(lang === 'km' ? 'បានបង្កើតអ្នកប្រើប្រាស់ដោយជោគជ័យ' : 'User created successfully.')
+      setTimeout(() => setActionMsg(''), 4000)
       load()
     } catch (err) {
-      alert(err.message)
+      setCreateError(err.message || 'Failed to create user')
     }
   }
 
@@ -182,6 +198,7 @@ export default function AdminUsersPage() {
       load()
     } catch (err) {
       setError(err.message)
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -195,9 +212,11 @@ export default function AdminUsersPage() {
         await usersApi.lock(user.uuid)
         setActionMsg(`Account locked for ${user.username}`)
       }
+      setTimeout(() => setActionMsg(''), 4000)
       load()
     } catch (err) {
       setError(err.message)
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -205,13 +224,15 @@ export default function AdminUsersPage() {
   async function handleResetPassword(e) {
     e.preventDefault()
     if (!newPassword || !selectedUser) return
+    setPwdError('')
     try {
       await usersApi.resetPassword(selectedUser.uuid, newPassword)
       setPwdOpen(false)
       setNewPassword('')
-      setActionMsg(`Password reset successfully for ${selectedUser.username}`)
+      setActionMsg(lang === 'km' ? `បានកំណត់ពាក្យសម្ងាត់ឡើងវិញសម្រាប់ ${selectedUser.username}` : `Password reset successfully for ${selectedUser.username}`)
+      setTimeout(() => setActionMsg(''), 4000)
     } catch (err) {
-      alert(err.message)
+      setPwdError(err.message || 'Failed to reset password')
     }
   }
 
@@ -229,10 +250,12 @@ export default function AdminUsersPage() {
     try {
       await usersApi.assignRoles(selectedUser.uuid, selectedRoles)
       setRoleOpen(false)
-      setActionMsg(`Roles updated for ${selectedUser.username}`)
+      setActionMsg(lang === 'km' ? `បានធ្វើបច្ចុប្បន្នភាពតួនាទីសម្រាប់ ${selectedUser.username}` : `Roles updated for ${selectedUser.username}`)
+      setTimeout(() => setActionMsg(''), 4000)
       load()
     } catch (err) {
-      alert(err.message)
+      setError(err.message || 'Failed to assign roles')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -252,6 +275,7 @@ export default function AdminUsersPage() {
       setInitialPerms(directUuids)
     } catch (err) {
       setError(err.message)
+      setTimeout(() => setError(''), 4000)
     } finally {
       setLoadingPerms(false)
     }
@@ -271,10 +295,12 @@ export default function AdminUsersPage() {
         await usersApi.revokePermission(selectedUser.uuid, rId)
       }
       setPermOpen(false)
-      setActionMsg(`Direct permissions updated for ${selectedUser.username}`)
+      setActionMsg(lang === 'km' ? `បានកែប្រែសិទ្ធិផ្ទាល់សម្រាប់ ${selectedUser.username}` : `Direct permissions updated for ${selectedUser.username}`)
+      setTimeout(() => setActionMsg(''), 4000)
       load()
     } catch (err) {
-      alert(err.message)
+      setError(err.message || 'Failed to update permissions')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -296,20 +322,31 @@ export default function AdminUsersPage() {
     try {
       await adminSessionsApi.terminate(sessionId)
       setUserSessions(s => s.filter(x => x.id !== sessionId))
+      setActionMsg(lang === 'km' ? 'បានបញ្ចប់វគ្គឧបករណ៍ដោយជោគជ័យ' : 'Device session terminated.')
+      setTimeout(() => setActionMsg(''), 4000)
     } catch (err) {
-      alert(err.message)
+      setError(err.message || 'Failed to terminate session')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
   // Delete User
-  async function handleRemoveUser(user) {
-    if (!window.confirm(`Are you sure you want to permanently delete user ${user.username}?`)) return
+  function handleRemoveUser(user) {
+    setDeleteConfirmUser(user)
+  }
+
+  async function confirmDeleteUser() {
+    if (!deleteConfirmUser) return
     try {
-      await usersApi.delete(user.uuid)
-      setActionMsg(`User ${user.username} deleted.`)
+      await usersApi.delete(deleteConfirmUser.uuid)
+      setActionMsg(lang === 'km' ? `បានលុបអ្នកប្រើប្រាស់ ${deleteConfirmUser.username} ដោយជោគជ័យ។` : `User ${deleteConfirmUser.username} deleted.`)
+      setTimeout(() => setActionMsg(''), 4000)
+      setDeleteConfirmUser(null)
       load()
     } catch (err) {
-      setError(err.message)
+      setDeleteConfirmUser(null)
+      setError(err.message || 'Failed to delete user')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -331,7 +368,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              onClick={() => setCreateOpen(true)}
+              onClick={() => { setCreateError(''); setCreateOpen(true); }}
               className="gap-1.5"
             >
               <UserPlus size={14} />
@@ -441,9 +478,12 @@ export default function AdminUsersPage() {
                         {/* User: Avatar + Name + Email */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-                              {initials}
-                            </div>
+                            <UserAvatar
+                              user={user}
+                              src={user.pictureUrl}
+                              className="w-8 h-8 shrink-0 border border-border/60 shadow-2xs"
+                              textClassName="text-xs font-semibold"
+                            />
                             <div className="min-w-0">
                               <p className="font-semibold text-foreground text-xs group-hover:text-blue-600 transition truncate">
                                 {fullName}
@@ -572,14 +612,22 @@ export default function AdminUsersPage() {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base">Create New User Account</DialogTitle>
+              <DialogTitle className="text-base">{tr('users.createModalTitle') || 'Create New User Account'}</DialogTitle>
               <DialogDescription className="text-xs">
-                Add an IAM identity to the directory.
+                {tr('users.createModalSubtitle') || 'Add an IAM identity to the directory.'}
               </DialogDescription>
             </DialogHeader>
+
+            {createError && (
+              <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-2.5 text-xs text-red-400">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{createError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleCreateUser} className="space-y-3 py-2 text-xs">
               <div className="space-y-1">
-                <Label htmlFor="c-username">Username</Label>
+                <Label htmlFor="c-username">Username <span className="text-red-500">*</span></Label>
                 <Input
                   id="c-username"
                   required
@@ -589,7 +637,7 @@ export default function AdminUsersPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="c-email">Email Address</Label>
+                <Label htmlFor="c-email">Email Address <span className="text-red-500">*</span></Label>
                 <Input
                   id="c-email"
                   type="email"
@@ -600,7 +648,7 @@ export default function AdminUsersPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="c-pwd">Initial Password</Label>
+                <Label htmlFor="c-pwd">Initial Password <span className="text-red-500">*</span></Label>
                 <Input
                   id="c-pwd"
                   type="password"
@@ -612,18 +660,20 @@ export default function AdminUsersPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label htmlFor="c-fname">First Name</Label>
+                  <Label htmlFor="c-fname">First Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="c-fname"
+                    required
                     value={createForm.givenName}
                     onChange={e => setCreateForm({ ...createForm, givenName: e.target.value })}
                     className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="c-lname">Last Name</Label>
+                  <Label htmlFor="c-lname">Last Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="c-lname"
+                    required
                     value={createForm.familyName}
                     onChange={e => setCreateForm({ ...createForm, familyName: e.target.value })}
                     className="h-8 text-xs"
@@ -651,6 +701,14 @@ export default function AdminUsersPage() {
                 Set a new password for <span className="font-semibold text-foreground">{selectedUser?.username}</span>.
               </DialogDescription>
             </DialogHeader>
+
+            {pwdError && (
+              <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-2.5 text-xs text-red-400">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{pwdError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleResetPassword} className="space-y-3 py-2 text-xs">
               <div className="space-y-1">
                 <Label htmlFor="new-p">New Password</Label>
@@ -661,7 +719,7 @@ export default function AdminUsersPage() {
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   className="h-8 text-xs"
-                  placeholder="Min 8 characters"
+                  placeholder="Enter new password"
                 />
               </div>
               <DialogFooter className="pt-3">
@@ -808,6 +866,31 @@ export default function AdminUsersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete User Confirmation Dialog */}
+        <AlertDialog open={Boolean(deleteConfirmUser)} onOpenChange={open => !open && setDeleteConfirmUser(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {lang === 'km' ? 'តើអ្នកប្រាកដជាចង់លុបអ្នកប្រើប្រាស់នេះ?' : 'Delete User?'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {lang === 'km'
+                  ? `តើអ្នកពិតជាចង់លុបអ្នកប្រើប្រាស់ @${deleteConfirmUser?.username} នេះជាអចិន្ត្រៃយ៍មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។`
+                  : `Are you sure you want to permanently delete user @${deleteConfirmUser?.username}? This action cannot be undone.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{tr('common.cancel') || (lang === 'km' ? 'បោះបង់' : 'Cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={confirmDeleteUser}
+              >
+                {lang === 'km' ? 'លុបអ្នកប្រើប្រាស់' : 'Delete User'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
       </div>
     </div>

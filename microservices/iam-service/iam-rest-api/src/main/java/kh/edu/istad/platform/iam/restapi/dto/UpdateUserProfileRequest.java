@@ -24,8 +24,29 @@ public record UpdateUserProfileRequest(
         String zoneinfo,
         String locale,
         String phoneNumber,
-        @Valid AddressDto address
+        @Valid AddressDto address,
+        String addressStreetAddress
 ) {
+    public UpdateUserProfileRequest(
+            String username,
+            String email,
+            String givenName,
+            String familyName,
+            String middleName,
+            String nickname,
+            String gender,
+            LocalDate birthdate,
+            String profileUrl,
+            String pictureUrl,
+            String websiteUrl,
+            String zoneinfo,
+            String locale,
+            String phoneNumber,
+            AddressDto address
+    ) {
+        this(username, email, givenName, familyName, middleName, nickname, gender, birthdate, profileUrl, pictureUrl, websiteUrl, zoneinfo, locale, phoneNumber, address, null);
+    }
+
     public UpdateUserProfileRequest(
             String email,
             String givenName,
@@ -42,7 +63,6 @@ public record UpdateUserProfileRequest(
             String phoneNumber,
             AddressDto address
     ) {
-        this(null, email, givenName, familyName, middleName, nickname, gender, birthdate, profileUrl, pictureUrl, websiteUrl, zoneinfo, locale, phoneNumber, address);
+        this(null, email, givenName, familyName, middleName, nickname, gender, birthdate, profileUrl, pictureUrl, websiteUrl, zoneinfo, locale, phoneNumber, address, null);
     }
 }
-

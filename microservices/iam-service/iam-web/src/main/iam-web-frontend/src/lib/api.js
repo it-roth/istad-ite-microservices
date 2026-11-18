@@ -40,6 +40,7 @@ export const meApi = {
   activity: (limit = 50) => req(`/me/activity?limit=${limit}`),
   connectedApplications: () => req('/me/connected-applications'),
   revokeConnectedApplication: (id) => req(`/me/connected-applications/${id}`, { method: 'DELETE' }),
+  deactivate: (data) => req('/me/deactivate', { method: 'POST', body: JSON.stringify(data || {}) }),
 }
 
 export const usersApi = {
@@ -53,7 +54,14 @@ export const usersApi = {
   disable: (uuid) => req(`/users/${uuid}/disable`, { method: 'POST' }),
   lock: (uuid) => req(`/users/${uuid}/lock`, { method: 'POST' }),
   unlock: (uuid) => req(`/users/${uuid}/unlock`, { method: 'POST' }),
-  resetPassword: (uuid, password) => req(`/users/${uuid}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+  resetPassword: (uuid, newPassword, confirmPassword) =>
+    req(`/users/${uuid}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        newPassword,
+        confirmPassword: confirmPassword || newPassword,
+      }),
+    }),
   authorities: (uuid) => req(`/users/${uuid}/authorities`),
   identities: (uuid) => req(`/users/${uuid}/identities`),
   assignRoles: (uuid, roleUuids) =>
@@ -63,6 +71,9 @@ export const usersApi = {
     req(`/users/${uuid}/permissions`, { method: 'POST', body: JSON.stringify({ permissionUuids, effect, reason }) }),
   revokePermission: (uuid, permissionUuid, reason = 'Revoked by admin') =>
     req(`/users/${uuid}/permissions/${permissionUuid}?reason=${encodeURIComponent(reason)}`, { method: 'DELETE' }),
+  sessions: (uuid) => req(`/users/${uuid}/sessions`),
+  terminateSession: (uuid, sessionId) => req(`/users/${uuid}/sessions/${sessionId}`, { method: 'DELETE' }),
+  loginHistory: (uuid, limit = 50) => req(`/users/${uuid}/login-history?limit=${limit}`),
 }
 
 export const rolesApi = {

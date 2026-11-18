@@ -31,44 +31,80 @@ public class AccountSecurityRepositoryAdapter implements AccountSecurityReposito
     public List<AccountSessionResult> findSessions(UUID userId, String currentSessionId) {
         if (sessionRepository != null) {
             try {
-                String username = jdbc.queryForObject("SELECT username FROM users WHERE uuid = ?", String.class, userId);
-                if (username != null) {
-                    var userSessions = sessionRepository.findByPrincipalName(username);
-                    if (userSessions != null && !userSessions.isEmpty()) {
-                        return userSessions.values().stream().map(s -> {
-                            String browser = s.getAttribute("browser") != null ? (String) s.getAttribute("browser") : "Chrome";
-                            String device = s.getAttribute("device") != null ? (String) s.getAttribute("device") : "Desktop";
-                            String ip = s.getAttribute("ipAddress") != null ? (String) s.getAttribute("ipAddress") : "127.0.0.1";
-                            String loc = s.getAttribute("location") != null ? (String) s.getAttribute("location") : "Phnom Penh, Cambodia";
-                            OffsetDateTime created = s.getCreationTime().atOffset(ZoneOffset.UTC);
-                            OffsetDateTime last = s.getLastAccessedTime().atOffset(ZoneOffset.UTC);
-                            return new AccountSessionResult(s.getId(), s.getId().equals(currentSessionId),
-                                    browser, device, ip, loc, created, last);
-                        }).toList();
+                List<String> principals = jdbc.query(
+                        "SELECT username, email FROM users WHERE uuid = ?",
+                        rs -> {
+                            java.util.List<String> list = new java.util.ArrayList<>();
+                            if (rs.next()) {
+                                String u = rs.getString("username");
+                                String e = rs.getString("email");
+                                if (u != null && !u.isBlank()) list.add(u);
+                                if (e != null && !e.isBlank()) list.add(e);
+                            }
+                            return list;
+                        }, userId);
+
+                java.util.Map<String, AccountSessionResult> sessionMap = new java.util.LinkedHashMap<>();
+                if (principals != null) {
+                    for (String principal : principals) {
+                        var userSessions = sessionRepository.findByPrincipalName(principal);
+                        if (userSessions != null) {
+                            for (Session s : userSessions.values()) {
+                                if (!sessionMap.containsKey(s.getId())) {
+                                    String browser = s.getAttribute("browser") != null ? (String) s.getAttribute("browser") : "Chrome";
+                                    String device = s.getAttribute("device") != null ? (String) s.getAttribute("device") : "Desktop";
+                                    String ip = s.getAttribute("ipAddress") != null ? (String) s.getAttribute("ipAddress") : "127.0.0.1";
+                                    String loc = s.getAttribute("location") != null ? (String) s.getAttribute("location") : "Phnom Penh, Cambodia";
+                                    OffsetDateTime created = s.getCreationTime().atOffset(ZoneOffset.UTC);
+                                    OffsetDateTime last = s.getLastAccessedTime().atOffset(ZoneOffset.UTC);
+                                    sessionMap.put(s.getId(), new AccountSessionResult(
+                                            s.getId(), s.getId().equals(currentSessionId),
+                                            browser, device, ip, loc, created, last));
+                                }
+                            }
+                        }
                     }
                 }
+                java.util.List<AccountSessionResult> list = new java.util.ArrayList<>(sessionMap.values());
+                list.sort((a, b) -> b.lastActivity().compareTo(a.lastActivity()));
+                return list;
             } catch (Exception ignored) {}
         }
-        return jdbc.query("""
-                SELECT id, browser, device, ip_address, location, created_at, last_activity
-                FROM iam_sessions WHERE user_uuid = ? AND revoked_at IS NULL
-                ORDER BY last_activity DESC
-                """, (rs, n) -> new AccountSessionResult(
-                rs.getString("id"), rs.getString("id").equals(currentSessionId),
-                rs.getString("browser"), rs.getString("device"), rs.getString("ip_address"),
-                rs.getString("location"), rs.getObject("created_at", OffsetDateTime.class),
-                rs.getObject("last_activity", OffsetDateTime.class)), userId);
+        return java.util.List.of();
     }
 
     @Override
     public List<AccountSessionResult> findAllSessions() {
-        return jdbc.query("""
-                SELECT id, browser, device, ip_address, location, created_at, last_activity
-                FROM iam_sessions WHERE revoked_at IS NULL ORDER BY last_activity DESC
-                """, (rs, n) -> new AccountSessionResult(rs.getString("id"), false,
-                rs.getString("browser"), rs.getString("device"), rs.getString("ip_address"),
-                rs.getString("location"), rs.getObject("created_at", OffsetDateTime.class),
-                rs.getObject("last_activity", OffsetDateTime.class)));
+        if (sessionRepository != null) {
+            try {
+                List<String> principals = jdbc.queryForList(
+                        "SELECT username FROM users WHERE is_deleted = false UNION SELECT email FROM users WHERE is_deleted = false",
+                        String.class);
+                java.util.Map<String, AccountSessionResult> sessionMap = new java.util.LinkedHashMap<>();
+                for (String principal : principals) {
+                    if (principal == null || principal.isBlank()) continue;
+                    var userSessions = sessionRepository.findByPrincipalName(principal);
+                    if (userSessions != null) {
+                        for (Session s : userSessions.values()) {
+                            if (!sessionMap.containsKey(s.getId())) {
+                                String browser = s.getAttribute("browser") != null ? (String) s.getAttribute("browser") : "Chrome";
+                                String device = s.getAttribute("device") != null ? (String) s.getAttribute("device") : "Desktop";
+                                String ip = s.getAttribute("ipAddress") != null ? (String) s.getAttribute("ipAddress") : "127.0.0.1";
+                                String loc = s.getAttribute("location") != null ? (String) s.getAttribute("location") : "Phnom Penh, Cambodia";
+                                OffsetDateTime created = s.getCreationTime().atOffset(ZoneOffset.UTC);
+                                OffsetDateTime last = s.getLastAccessedTime().atOffset(ZoneOffset.UTC);
+                                sessionMap.put(s.getId(), new AccountSessionResult(
+                                        s.getId(), false, browser, device, ip, loc, created, last));
+                            }
+                        }
+                    }
+                }
+                java.util.List<AccountSessionResult> list = new java.util.ArrayList<>(sessionMap.values());
+                list.sort((a, b) -> b.lastActivity().compareTo(a.lastActivity()));
+                return list;
+            } catch (Exception ignored) {}
+        }
+        return java.util.List.of();
     }
 
     @Override
@@ -79,8 +115,6 @@ public class AccountSecurityRepositoryAdapter implements AccountSecurityReposito
                 sessionRepository.deleteById(sessionId);
             } catch (Exception ignored) {}
         }
-        jdbc.update("UPDATE iam_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_uuid = ? AND id = ?",
-                userId, sessionId);
     }
 
     @Override
@@ -90,7 +124,6 @@ public class AccountSecurityRepositoryAdapter implements AccountSecurityReposito
                 sessionRepository.deleteById(sessionId);
             } catch (Exception ignored) {}
         }
-        jdbc.update("UPDATE iam_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ?", sessionId);
     }
 
     @Override
@@ -98,21 +131,33 @@ public class AccountSecurityRepositoryAdapter implements AccountSecurityReposito
     public void revokeOtherSessions(UUID userId, String currentSessionId) {
         if (sessionRepository != null) {
             try {
-                String username = jdbc.queryForObject("SELECT username FROM users WHERE uuid = ?", String.class, userId);
-                if (username != null) {
-                    var userSessions = sessionRepository.findByPrincipalName(username);
-                    if (userSessions != null) {
-                        for (String sid : userSessions.keySet()) {
-                            if (!sid.equals(currentSessionId)) {
-                                sessionRepository.deleteById(sid);
+                List<String> principals = jdbc.query(
+                        "SELECT username, email FROM users WHERE uuid = ?",
+                        rs -> {
+                            java.util.List<String> list = new java.util.ArrayList<>();
+                            if (rs.next()) {
+                                String u = rs.getString("username");
+                                String e = rs.getString("email");
+                                if (u != null && !u.isBlank()) list.add(u);
+                                if (e != null && !e.isBlank()) list.add(e);
+                            }
+                            return list;
+                        }, userId);
+
+                if (principals != null) {
+                    for (String principal : principals) {
+                        var userSessions = sessionRepository.findByPrincipalName(principal);
+                        if (userSessions != null) {
+                            for (String sid : userSessions.keySet()) {
+                                if (!sid.equals(currentSessionId)) {
+                                    sessionRepository.deleteById(sid);
+                                }
                             }
                         }
                     }
                 }
             } catch (Exception ignored) {}
         }
-        jdbc.update("UPDATE iam_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_uuid = ? AND id <> ? AND revoked_at IS NULL",
-                userId, currentSessionId);
     }
 
     @Override

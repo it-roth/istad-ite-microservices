@@ -9,6 +9,7 @@ import kh.edu.istad.platform.iam.domain.mapper.UserResultMapper;
 import kh.edu.istad.platform.iam.domain.port.out.PasswordHasher;
 import kh.edu.istad.platform.iam.domain.port.out.RoleRepository;
 import kh.edu.istad.platform.iam.domain.port.out.UserRepository;
+import kh.edu.istad.platform.iam.domain.service.PasswordPolicyValidator;
 import kh.edu.istad.platform.iam.domain.valueobject.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +28,12 @@ public class RegisterUserUseCase {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordHasher passwordHasher;
+    private final PasswordPolicyValidator passwordPolicyValidator;
 
     @Transactional
     public UserResult execute(RegisterUserCommand command) {
         log.info("Executing RegisterUserUseCase for username: {}", command.username());
+        passwordPolicyValidator.validate(command.rawPassword());
         if (userRepository.existsByUsername(command.username())) {
             throw new IamDomainException("Username '" + command.username() + "' is already taken");
         }

@@ -62,12 +62,45 @@ public interface IamWebMapper {
         @Mapping(target = "country", source = "request.address.country")
         CreateUserCommand toCommand(CreateUserRequest request);
 
-        @Mapping(target = "streetAddress", source = "request.address.streetAddress")
-        @Mapping(target = "locality", source = "request.address.locality")
-        @Mapping(target = "region", source = "request.address.region")
-        @Mapping(target = "postalCode", source = "request.address.postalCode")
-        @Mapping(target = "country", source = "request.address.country")
-        UpdateUserProfileCommand toCommand(UUID userUuid, UpdateUserProfileRequest request);
+        default UpdateUserProfileCommand toCommand(UUID userUuid, UpdateUserProfileRequest request) {
+                String street = null;
+                String locality = null;
+                String region = null;
+                String postal = null;
+                String country = null;
+                if (request.address() != null) {
+                        street = request.address().streetAddress();
+                        locality = request.address().locality();
+                        region = request.address().region();
+                        postal = request.address().postalCode();
+                        country = request.address().country();
+                }
+                if ((street == null || street.isBlank()) && request.addressStreetAddress() != null) {
+                        street = request.addressStreetAddress();
+                }
+                return new UpdateUserProfileCommand(
+                                userUuid,
+                                request.username(),
+                                request.email(),
+                                request.givenName(),
+                                request.familyName(),
+                                request.middleName(),
+                                request.nickname(),
+                                request.gender(),
+                                request.birthdate(),
+                                request.profileUrl(),
+                                request.pictureUrl(),
+                                request.websiteUrl(),
+                                request.zoneinfo(),
+                                request.locale(),
+                                request.phoneNumber(),
+                                street,
+                                locality,
+                                region,
+                                postal,
+                                country
+                );
+        }
 
         default ChangePasswordCommand toCommand(UUID userUuid, ChangePasswordRequest request) {
                 return new ChangePasswordCommand(
@@ -98,6 +131,7 @@ public interface IamWebMapper {
         default UpdateRoleCommand toCommand(UUID roleUuid, UpdateRoleRequest request) {
                 return new UpdateRoleCommand(
                                 roleUuid,
+                                request.name(),
                                 request.description());
         }
 
@@ -190,6 +224,8 @@ public interface IamWebMapper {
         RoleResponse toResponse(RoleResult result);
 
         @Mapping(target = "description", ignore = true)
+        @Mapping(target = "createdAt", ignore = true)
+        @Mapping(target = "updatedAt", ignore = true)
         @Mapping(target = "active", source = "isActive")
         @Mapping(target = "system", source = "isSystem")
         RoleResponse toResponse(RoleSummary summary);

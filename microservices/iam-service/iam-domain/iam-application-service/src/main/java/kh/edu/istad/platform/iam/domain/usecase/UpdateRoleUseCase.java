@@ -30,7 +30,18 @@ public class UpdateRoleUseCase {
                     return new IamDomainException("Role not found: " + command.roleUuid());
                 });
 
-        iamDomainService.validateRoleCanBeModifiedOrDeleted(existing);
+        String newName = (command.name() != null && !command.name().isBlank())
+                ? command.name().trim()
+                : existing.getName();
+
+        if (!newName.equalsIgnoreCase(existing.getName())) {
+            if ("SUPERADMIN".equalsIgnoreCase(existing.getName()) || "ADMIN".equalsIgnoreCase(existing.getName())) {
+                throw new IamDomainException("System core role '" + existing.getName() + "' identifier cannot be renamed");
+            }
+            if (roleRepository.existsByName(newName)) {
+                throw new IamDomainException("Role with name '" + newName + "' already exists");
+            }
+        }
 
         String actor = currentActorProvider.getCurrentActor();
         LocalDateTime now = LocalDateTime.now();
@@ -38,7 +49,7 @@ public class UpdateRoleUseCase {
         Role updated = Role.builder()
                 .id(existing.getId())
                 .internalId(existing.getInternalId())
-                .name(existing.getName())
+                .name(newName)
                 .description(command.description())
                 .isSystem(existing.getSystem())
                 .isActive(existing.getActive())

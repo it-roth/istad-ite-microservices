@@ -30,6 +30,16 @@ import {
   TabsContent,
 } from '@/components/ui/tabs'
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
+import {
   Plus, Search, AppWindow, MoreHorizontal, Trash2, Pencil, X,
   AlertCircle, Eye, Copy, Check, ExternalLink, Shield, Key, Clock, CheckCircle2,
   Lock, Globe, Calendar, RefreshCw, Layers, ShieldCheck, ArrowUpRight
@@ -44,6 +54,8 @@ export default function ApplicationsPage() {
   const [search, setSearch] = useState('')
   const [selectedClient, setSelectedClient] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [deleteConfirmClient, setDeleteConfirmClient] = useState(null)
+  const [actionMsg, setActionMsg] = useState('')
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -146,21 +158,28 @@ export default function ApplicationsPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  async function handleDelete(client, e) {
+  function handleDelete(client, e) {
     if (e) e.stopPropagation()
-    const id = client.id || client.clientId
-    const name = client.clientName || client.clientId
-    if (!window.confirm(lang === 'km' 
-      ? `តើអ្នកប្រាកដជាចង់លុបកម្មវិធី "${name}" មែនទេ?` 
-      : `Are you sure you want to delete application "${name}"?`)) return
+    setDeleteConfirmClient(client)
+  }
+
+  async function confirmDelete() {
+    if (!deleteConfirmClient) return
+    const id = deleteConfirmClient.id || deleteConfirmClient.clientId
+    const name = deleteConfirmClient.clientName || deleteConfirmClient.clientId
     try {
       await clientsApi.delete(id)
       if (selectedClient && (selectedClient.id === id || selectedClient.clientId === id)) {
         setSelectedClient(null)
       }
+      setDeleteConfirmClient(null)
+      setActionMsg(lang === 'km' ? `បានលុបកម្មវិធី "${name}" ដោយជោគជ័យ` : `Application "${name}" deleted successfully.`)
+      setTimeout(() => setActionMsg(''), 4000)
       loadClients()
     } catch (err) {
-      alert(err.message)
+      setDeleteConfirmClient(null)
+      setError(err.message || 'Failed to delete application')
+      setTimeout(() => setError(''), 4000)
     }
   }
 
@@ -249,6 +268,12 @@ export default function ApplicationsPage() {
             </Button>
           </div>
         </div>
+
+        {actionMsg && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
+            <CheckCircle2 size={15} /> {actionMsg}
+          </div>
+        )}
 
         {error && (
           <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50/70 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
@@ -868,6 +893,31 @@ export default function ApplicationsPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Alert Dialog */}
+        <AlertDialog open={Boolean(deleteConfirmClient)} onOpenChange={open => !open && setDeleteConfirmClient(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {lang === 'km' ? 'តើអ្នកប្រាកដជាចង់លុបកម្មវិធីនេះមែនទេ?' : 'Delete Application?'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {lang === 'km'
+                  ? `តើអ្នកប្រាកដជាចង់លុបកម្មវិធី "${deleteConfirmClient?.clientName || deleteConfirmClient?.clientId}" មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។`
+                  : `Are you sure you want to permanently delete application "${deleteConfirmClient?.clientName || deleteConfirmClient?.clientId}"? This action cannot be undone.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{tr('common.cancel') || (lang === 'km' ? 'បោះបង់' : 'Cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={confirmDelete}
+              >
+                {lang === 'km' ? 'លុបកម្មវិធី' : 'Delete Application'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
       </div>
     </div>
